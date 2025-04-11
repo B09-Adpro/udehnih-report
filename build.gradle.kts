@@ -39,29 +39,19 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.postgresql:postgresql")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+
     testImplementation("org.seleniumhq.selenium:selenium-java:$seleniumJavaVersion")
     testImplementation("io.github.bonigarcia:selenium-jupiter:$seleniumJupiterVersion")
     testImplementation("io.github.bonigarcia:webdrivermanager:$webdrivermanagerVersion")
     testImplementation("org.junit.jupiter:junit-jupiter:$junitJupiterVersion")
+
+    implementation("jakarta.persistence:jakarta.persistence-api:3.1.0")
+    runtimeOnly("com.h2database:h2")
 }
 
-tasks.register<Test>("unitTest") {
-     description = "Runs unit tests."
-     group = "verification"
-     filter {
-         excludeTestsMatching("*FunctionalTest")
-     }
- }
- 
-tasks.register<Test>("functionalTest") {
-    description = "Runs functional tests."
-    group = "verification"
-    filter {
-        includeTestsMatching("*FunctionalTest")
-    }
-}
-
-tasks.withType<Test>().configureEach {
+tasks.withType<Test> {
     useJUnitPlatform()
 }
 
@@ -69,6 +59,7 @@ tasks.test {
     filter {
         excludeTestsMatching("*FunctionalTest")
     }
+
     finalizedBy(tasks.jacocoTestReport)
 }
 
