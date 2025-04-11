@@ -1,5 +1,6 @@
 plugins {
     java
+    jacoco
     id("org.springframework.boot") version "3.4.4"
     id("io.spring.dependency-management") version "1.1.7"
 }
@@ -52,14 +53,25 @@ tasks.register<Test>("unitTest") {
      }
  }
  
- tasks.register<Test>("functionalTest") {
-     description = "Runs functional tests."
-     group = "verification"
-     filter {
-         includeTestsMatching("*FunctionalTest")
-     }
- }
- 
- tasks.withType<Test>().configureEach {
-     useJUnitPlatform()
- }
+tasks.register<Test>("functionalTest") {
+    description = "Runs functional tests."
+    group = "verification"
+    filter {
+        includeTestsMatching("*FunctionalTest")
+    }
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
+tasks.test {
+    filter {
+        excludeTestsMatching("*FunctionalTest")
+    }
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+}
