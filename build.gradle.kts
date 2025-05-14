@@ -19,6 +19,10 @@ java {
     }
 }
 
+springBoot {
+     mainClass = 'udehnih.ReportApplication'
+}
+
 configurations {
     compileOnly {
         extendsFrom(configurations.annotationProcessor.get())
@@ -49,6 +53,14 @@ dependencies {
 
     implementation("jakarta.persistence:jakarta.persistence-api:3.1.0")
     runtimeOnly("com.h2database:h2")
+}
+
+bootJar {
+     archiveFileName = "udehnih-report.jar"
+}
+ 
+jar {
+    enabled = false
 }
 
 tasks.register<Test>("functionalTest") {
