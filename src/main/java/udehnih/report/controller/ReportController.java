@@ -12,35 +12,19 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * REST controller for managing reports.
- */
 @RestController
 @RequestMapping("/api/reports")
 public class ReportController {
 
-    /**
-     * Service for report operations.
-     */
     @Autowired
     private ReportService reportService;
 
-    /**
-     * Create a new report.
-     * @param request the report request DTO
-     * @return the created report as a response DTO
-     */
     @PostMapping
-    public ResponseEntity<ReportResponseDto> create(@RequestBody ReportRequestDto request) {
+    public ResponseEntity<ReportResponseDto> create(@RequestBody final ReportRequestDto request) {
         Report created = reportService.createReport(ReportMapper.toEntity(request));
         return ResponseEntity.status(201).body(ReportMapper.toDto(created));
     }
 
-    /**
-     * Get reports by student ID.
-     * @param studentId the student ID
-     * @return list of report response DTOs
-     */
     @GetMapping
     public ResponseEntity<List<ReportResponseDto>> getByStudent(@RequestParam String studentId) {
         List<Report> reports = reportService.getReportsByStudentId(studentId);
@@ -48,12 +32,6 @@ public class ReportController {
         return ResponseEntity.ok(dtos);
     }
 
-    /**
-     * Update a report.
-     * @param reportId the report ID
-     * @param request the report request DTO
-     * @return the updated report as a response DTO
-     */
     @PutMapping("/{reportId}")
     public ResponseEntity<ReportResponseDto> update(@PathVariable("reportId") Integer reportId, @RequestBody ReportRequestDto request) {
         try {
@@ -64,11 +42,6 @@ public class ReportController {
         }
     }
 
-    /**
-     * Delete a report.
-     * @param reportId the report ID
-     * @return no content response
-     */
     @DeleteMapping("/{reportId}")
     public ResponseEntity<Void> delete(@PathVariable("reportId") Integer reportId) {
         try {
