@@ -1,6 +1,7 @@
 package udehnih.report.model;
 
 import org.junit.jupiter.api.Test;
+import udehnih.report.factory.ReportFactory;
 import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -97,35 +98,13 @@ public class ReportTest {
 
     @Test
     void testReportEqualsAndHashCode() {
-        Report report1 = Report.builder()
-            .reportId(1)
-            .studentId("12345")
-            .title("Test Report")
-            .detail("This is a test report")
-            .status("Pending")
-            .createdAt(LocalDateTime.now())
-            .updatedAt(LocalDateTime.now())
-            .build();
+        Report report1 = ReportFactory.createOpenReport("12345", "Test Report", "This is a test report");
+        Report report2 = ReportFactory.createClosedReport("56789", "Test Report 2", "This is a test report 2");
+        Report report3 = ReportFactory.createOpenReport("12345", "Test Report", "This is a test report");
 
-        Report report2 = Report.builder()
-                .reportId(2)
-                .studentId("56789")
-                .title("Test Report 2")
-                .detail("This is a test report 2")
-                .status("Pending")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-            .build();
-        
-        Report report3 = Report.builder()
-               .reportId(1)
-               .studentId("12345")
-               .title("Test Report")
-               .detail("This is a test report")
-               .status("Pending")
-               .createdAt(LocalDateTime.now())
-               .updatedAt(LocalDateTime.now())
-               .build();
+        report1.setReportId(1);
+        report2.setReportId(2);
+        report3.setReportId(1);
 
         assertEquals(report1, report1);
         assertEquals(report1, report3);
@@ -139,22 +118,21 @@ public class ReportTest {
 
     @Test
     void testReportToString() {
-        Report report = Report.builder()
-               .reportId(1)
-               .studentId("12345")
-               .title("Test Report")
-               .detail("This is a test report")
-               .status("Pending")
-               .createdAt(LocalDateTime.now())
-               .updatedAt(LocalDateTime.now())
-               .build();
-        
+        Report report = ReportFactory.createOpenReport("12345", "Test Report", "This is a test report");
         String toString = report.toString();
-
-        assertTrue(toString.contains("1"));
         assertTrue(toString.contains("12345"));
         assertTrue(toString.contains("Test Report"));
         assertTrue(toString.contains("This is a test report"));
-        assertTrue(toString.contains("Pending"));
+        assertTrue(toString.contains("OPEN"));
+    }
+
+    @Test
+    void testIsOpenWithFactory() {
+        Report openReport = ReportFactory.createOpenReport("1", "t", "d");
+        Report closedReport = ReportFactory.createClosedReport("1", "t", "d");
+        Report inProgressReport = ReportFactory.createInProgressReport("1", "t", "d");
+        assertTrue(openReport.isOpen());
+        assertFalse(closedReport.isOpen());
+        assertFalse(inProgressReport.isOpen());
     }
 }

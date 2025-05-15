@@ -15,8 +15,13 @@ val junitJupiterVersion = "5.9.1"
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion.set(JavaLanguageVersion.of(21))
+        vendor.set(JvmVendorSpec.ADOPTIUM)
     }
+}
+
+springBoot {
+    mainClass = "udehnih.ReportApplication"
 }
 
 configurations {
@@ -49,6 +54,14 @@ dependencies {
 
     implementation("jakarta.persistence:jakarta.persistence-api:3.1.0")
     runtimeOnly("com.h2database:h2")
+}
+
+tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
+    archiveFileName.set("udehnih-report.jar")
+}
+
+tasks.named<Jar>("jar") {
+    enabled = false
 }
 
 tasks.register<Test>("functionalTest") {
