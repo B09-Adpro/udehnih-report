@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+@SuppressWarnings("PMD.ImplicitFunctionalInterface")
 @Repository
 public interface ReportRepository extends JpaRepository<Report, Integer> {
     List<Report> findByStudentId(String studentId);
