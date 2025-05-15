@@ -10,4 +10,9 @@ class ReportApplicationTests {
     void contextLoads() {
     }
 
+    @Test
+    void mainRuns() {
+        ReportApplication.main(new String[] {});
+    }
+
 }

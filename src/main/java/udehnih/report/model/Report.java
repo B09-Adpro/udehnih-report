@@ -39,4 +39,8 @@ public class Report {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public boolean isOpen() {
+        return "OPEN".equals(this.status);
+    }
 }

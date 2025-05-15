@@ -9,4 +9,8 @@ import java.util.List;
 @Repository
 public interface ReportRepository extends JpaRepository<Report, Integer> {
     List<Report> findByStudentId(String studentId);
+
+    default boolean existsByStudentId(String studentId) {
+        return !findByStudentId(studentId).isEmpty();
+    }
 }

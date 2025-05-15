@@ -2,6 +2,7 @@ package udehnih.report.controller;
 
 import udehnih.report.model.Report;
 import udehnih.report.service.ReportService;
+import udehnih.report.factory.ReportFactory;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -39,14 +40,21 @@ public class StaffReportControllerTest {
 
     @Test
     void testResolveReport() throws Exception {
-        Report dummy = new Report();
-        dummy.setReportId(1);
-        dummy.setStatus("RESOLVED");
+        Report dummy = ReportFactory.createClosedReport("12345", "Test", "Test Detail");
 
         when(reportService.resolveReport(1)).thenReturn(dummy);
 
         mockMvc.perform(put("/api/staff/reports/1/resolve"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("RESOLVED"));
+                .andExpect(jsonPath("$.status").value("CLOSED"));
+    }
+
+    @Test
+    void testResolveReportNotFound() throws Exception {
+        Mockito.when(reportService.resolveReport(99))
+               .thenThrow(new RuntimeException("Report not found"));
+
+        mockMvc.perform(put("/api/staff/reports/99/resolve"))
+                .andExpect(status().isNotFound());
     }
 }
