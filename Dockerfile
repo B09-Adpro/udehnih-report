@@ -1,10 +1,10 @@
-FROM docker.io/library/openjdk:25-jdk-slim@sha256:41120b274ca88d5159b1670b3d1c478d458332ccc11e6af79110b7a67a288981 AS builder
+FROM docker.io/library/eclipse-temurin:21-jdk-alpine AS builder
  
 WORKDIR /src/main/java/udehnih/report
 COPY . .
 RUN ./gradlew clean bootJar
 
-FROM docker.io/library/openjdk:25-jdk-slim@sha256:41120b274ca88d5159b1670b3d1c478d458332ccc11e6af79110b7a67a288981 AS runner
+FROM docker.io/library/eclipse-temurin:21-jre-alpine AS runner
 
 ARG USER_NAME=udehnih
 ARG USER_UID=1000
