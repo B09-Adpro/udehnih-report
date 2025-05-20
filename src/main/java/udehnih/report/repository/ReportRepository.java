@@ -9,9 +9,11 @@ import java.util.List;
 @SuppressWarnings("PMD.ImplicitFunctionalInterface")
 @Repository
 public interface ReportRepository extends JpaRepository<Report, Integer> {
-    List<Report> findByStudentId(String studentId);
+    List<Report> findByUserId(String userId);
 
-    default boolean existsByStudentId(String studentId) {
-        return !findByStudentId(studentId).isEmpty();
+    List<Report> findByStatus(String status);
+
+    default boolean existsByUserId(String userId) {
+        return !findByUserId(userId).isEmpty();
     }
 }
