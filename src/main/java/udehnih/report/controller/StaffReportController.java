@@ -21,11 +21,11 @@ public class StaffReportController {
         return ResponseEntity.ok(reports);
     }
 
-    @PutMapping("/{id}/resolve")
-    public ResponseEntity<Report> resolveReport(@PathVariable Integer id) {
+    @PutMapping("/{reportId}")
+    public ResponseEntity<Report> processReport(@PathVariable("reportId") Integer reportId) {
         try {
-            Report resolved = reportService.resolveReport(id);
-            return ResponseEntity.ok(resolved);
+            Report processed = reportService.processReport(reportId);
+            return ResponseEntity.ok(processed);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
