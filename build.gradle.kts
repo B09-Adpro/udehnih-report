@@ -21,7 +21,7 @@ java {
 }
 
 springBoot {
-    mainClass = "udehnih.ReportApplication"
+    mainClass = "udehnih.report.ReportApplication"
 }
 
 configurations {
