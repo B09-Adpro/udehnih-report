@@ -3,6 +3,7 @@ package udehnih.report.repository;
 import udehnih.report.model.Report;
 import udehnih.report.repository.ReportRepository;
 import udehnih.report.factory.ReportFactory;
+import udehnih.report.enums.ReportStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -47,7 +48,7 @@ public class ReportRepositoryTests {
     }
 
     @Test
-    void whenFindByUserId_thenReturnReports() {
+    void whenFindByStudentId_thenReturnReports() {
         Report report1 = ReportFactory.createOpenReport("12345", "Test Report 1", "Test Detail 1");
         Report report2 = ReportFactory.createOpenReport("12345", "Test Report 2", "Test Detail 2");
 
@@ -55,7 +56,7 @@ public class ReportRepositoryTests {
         entityManager.persist(report2);
         entityManager.flush();
 
-        List<Report> found = reportRepository.findByUserId("12345");
+        List<Report> found = reportRepository.findByStudentId("12345");
 
         assertThat(found).hasSize(2);
         assertThat(found).allMatch(report -> report.getStudentId().equals("12345"));
@@ -88,13 +89,13 @@ public class ReportRepositoryTests {
     }
 
     @Test
-    void whenExistsByUserId_thenReturnTrueOrFalse() {
+    void whenExistsByStudentId_thenReturnTrueOrFalse() {
         Report report = ReportFactory.createOpenReport("12345", "Test Report", "Test Detail");
         entityManager.persist(report);
         entityManager.flush();
 
-        boolean exists = reportRepository.existsByUserId("12345");
-        boolean notExists = reportRepository.existsByUserId("99999");
+        boolean exists = reportRepository.existsByStudentId("12345");
+        boolean notExists = reportRepository.existsByStudentId("99999");
 
         assertThat(exists).isTrue();
         assertThat(notExists).isFalse();
@@ -105,19 +106,19 @@ public class ReportRepositoryTests {
         Report openReport1 = ReportFactory.createOpenReport("12345", "Open Report 1", "Detail 1");
         Report openReport2 = ReportFactory.createOpenReport("67890", "Open Report 2", "Detail 2");
         Report resolvedReport = ReportFactory.createOpenReport("11111", "Resolved Report", "Detail 3");
-        resolvedReport.setStatus("RESOLVED");
+        resolvedReport.setStatus(ReportStatus.RESOLVED);
 
         entityManager.persist(openReport1);
         entityManager.persist(openReport2);
         entityManager.persist(resolvedReport);
         entityManager.flush();
 
-        List<Report> openReports = reportRepository.findByStatus("OPEN");
-        List<Report> resolvedReports = reportRepository.findByStatus("RESOLVED");
+        List<Report> openReports = reportRepository.findByStatus(ReportStatus.OPEN);
+        List<Report> resolvedReports = reportRepository.findByStatus(ReportStatus.RESOLVED);
 
         assertThat(openReports).hasSize(2);
-        assertThat(openReports).allMatch(report -> "OPEN".equals(report.getStatus()));
+        assertThat(openReports).allMatch(report -> ReportStatus.OPEN.equals(report.getStatus()));
         assertThat(resolvedReports).hasSize(1);
-        assertThat(resolvedReports).allMatch(report -> "RESOLVED".equals(report.getStatus()));
+        assertThat(resolvedReports).allMatch(report -> ReportStatus.RESOLVED.equals(report.getStatus()));
     }
 }
