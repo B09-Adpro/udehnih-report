@@ -38,5 +38,5 @@ jobs:
             docker run -d \
             --name=web_server \
             -p 8080:8080 \
-            -e ENV1="insert env var anda disini jika perlu" \
+            -e ENV1="Insert env var Anda disini jika perlu" \
             ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_REPO_NAME }}:latest
