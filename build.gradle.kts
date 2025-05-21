@@ -55,6 +55,10 @@ dependencies {
     implementation("jakarta.persistence:jakarta.persistence-api:3.1.0")
     runtimeOnly("com.h2database:h2")
     implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
+
+    testImplementation("com.h2database:h2")
+    testImplementation("org.hibernate.orm:hibernate-core:6.4.4.Final")
+    testImplementation("org.hibernate.orm:hibernate-community-dialects:6.4.4.Final")
 }
 
 tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
