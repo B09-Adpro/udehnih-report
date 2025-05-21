@@ -2,6 +2,7 @@ package udehnih.report.controller;
 
 import udehnih.report.model.Report;
 import udehnih.report.service.ReportService;
+import udehnih.report.service.AuthService;
 import udehnih.report.dto.ReportRequestDto;
 import udehnih.report.dto.ReportResponseDto;
 import udehnih.report.dto.ReportMapper;
@@ -18,22 +19,37 @@ public class ReportController {
 
     @Autowired
     private ReportService reportService;
+    private AuthService authService;
 
     @PostMapping
-    public ResponseEntity<ReportResponseDto> create(@RequestBody final ReportRequestDto request) {
+    public ResponseEntity<ReportResponseDto> createReport(@RequestBody final ReportRequestDto request) {
         Report created = reportService.createReport(ReportMapper.toEntity(request));
         return ResponseEntity.status(201).body(ReportMapper.toDto(created));
     }
 
     @GetMapping
-    public ResponseEntity<List<ReportResponseDto>> getByStudent(@RequestParam String studentId) {
-        List<Report> reports = reportService.getReportsByStudentId(studentId);
+    public ResponseEntity<List<ReportResponseDto>> getUserReports(
+        @RequestParam(required = false) String studentId,
+        @RequestHeader("X-User-Email") String userEmail,
+        @RequestHeader("X-User-Role") String userRole) {
+
+        if (!userRole.equals("STUDENT")) {
+            return ResponseEntity.badRequest().build();
+        }
+        
+        List<Report> reports;
+        if (studentId != null && !studentId.trim().isEmpty()) {
+            reports = reportService.getUserReports(studentId);
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
+        
         List<ReportResponseDto> dtos = reports.stream().map(ReportMapper::toDto).collect(Collectors.toList());
         return ResponseEntity.ok(dtos);
     }
 
     @PutMapping("/{reportId}")
-    public ResponseEntity<ReportResponseDto> update(@PathVariable("reportId") Integer reportId, @RequestBody ReportRequestDto request) {
+    public ResponseEntity<ReportResponseDto> updateReport(@PathVariable("reportId") Integer reportId, @RequestBody ReportRequestDto request) {
         try {
             Report updated = reportService.updateReport(reportId, ReportMapper.toEntity(request));
             return ResponseEntity.ok(ReportMapper.toDto(updated));
@@ -42,8 +58,8 @@ public class ReportController {
         }
     }
 
-    @DeleteMapping("/{reportId}")
-    public ResponseEntity<Void> delete(@PathVariable("reportId") Integer reportId) {
+    @DeleteMapping("/{reportId}") 
+    public ResponseEntity<Void> deleteReport(@PathVariable("reportId") Integer reportId) {
         try {
             reportService.deleteReport(reportId);
             return ResponseEntity.noContent().build();
