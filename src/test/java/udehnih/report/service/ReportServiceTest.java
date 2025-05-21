@@ -3,6 +3,7 @@ package udehnih.report.service;
 import udehnih.report.model.Report;
 import udehnih.report.repository.ReportRepository;
 import udehnih.report.factory.ReportFactory;
+import udehnih.report.enums.ReportStatus;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,12 +33,12 @@ public class ReportServiceTest {
     }
 
     @Test
-    void testGetReportsByStudentId() {
+    void testGetUserReports() {
         Report report = ReportFactory.createOpenReport("12345", "Judul", "Detail");
         when(reportRepository.findByStudentId("12345"))
                 .thenReturn(Arrays.asList(report));
 
-        List<Report> reports = reportService.getReportsByStudentId("12345");
+        List<Report> reports = reportService.getUserReports("12345");
 
         assertEquals(1, reports.size());
         assertEquals("12345", reports.get(0).getStudentId());
@@ -51,28 +52,28 @@ public class ReportServiceTest {
         Report result = reportService.createReport(report);
 
         assertNotNull(result);
-        assertEquals("OPEN", result.getStatus());
+        assertEquals(ReportStatus.OPEN, result.getStatus());
         verify(reportRepository).save(any(Report.class));
     }
 
     @Test
-    void testResolveReport() {
+    void testProcessReport() {
         Report existing = ReportFactory.createOpenReport("12345", "Judul", "Detail");
         when(reportRepository.findById(1)).thenReturn(Optional.of(existing));
         when(reportRepository.save(any())).thenReturn(existing);
 
-        Report result = reportService.resolveReport(1);
+        Report result = reportService.processReport(1);
 
-        assertEquals("CLOSED", result.getStatus());
+        assertEquals(ReportStatus.RESOLVED, result.getStatus());
         verify(reportRepository).save(existing);
     }
 
     @Test
-    void testResolveReportNotFound() {
+    void testProcessReportNotFound() {
         when(reportRepository.findById(99)).thenReturn(Optional.empty());
 
         Exception exception = assertThrows(RuntimeException.class, () -> {
-            reportService.resolveReport(99);
+            reportService.processReport(99);
         });
 
         assertEquals("Report not found", exception.getMessage());
@@ -108,7 +109,7 @@ public class ReportServiceTest {
     void testGetAllReports() {
         List<Report> mockReports = Arrays.asList(
                 ReportFactory.createOpenReport("12345", "Title1", "Detail1"),
-                ReportFactory.createClosedReport("67890", "Title2", "Detail2")
+                ReportFactory.createOpenReport("67890", "Title2", "Detail2")
         );
 
         when(reportRepository.findAll()).thenReturn(mockReports);
