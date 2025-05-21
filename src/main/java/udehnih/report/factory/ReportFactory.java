@@ -1,6 +1,7 @@
 package udehnih.report.factory;
 
 import udehnih.report.model.Report;
+import udehnih.report.enums.ReportStatus;
 import java.time.LocalDateTime;
 
 public class ReportFactory {
@@ -9,7 +10,7 @@ public class ReportFactory {
                 .studentId(studentId)
                 .title(title)
                 .detail(detail)
-                .status("OPEN")
+                .status(ReportStatus.OPEN)
                 .createdAt(LocalDateTime.now())
                 .build();
     }
@@ -19,7 +20,7 @@ public class ReportFactory {
                 .studentId(studentId)
                 .title(title)
                 .detail(detail)
-                .status("CLOSED")
+                .status(ReportStatus.CLOSED)
                 .createdAt(LocalDateTime.now())
                 .build();
     }
@@ -29,7 +30,7 @@ public class ReportFactory {
                 .studentId(studentId)
                 .title(title)
                 .detail(detail)
-                .status("IN_PROGRESS")
+                .status(ReportStatus.IN_PROGRESS)
                 .createdAt(LocalDateTime.now())
                 .build();
     }
