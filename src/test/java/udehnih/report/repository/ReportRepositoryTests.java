@@ -3,6 +3,7 @@ package udehnih.report.repository;
 import udehnih.report.model.Report;
 import udehnih.report.repository.ReportRepository;
 import udehnih.report.factory.ReportFactory;
+import udehnih.report.enums.ReportStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -98,5 +99,26 @@ public class ReportRepositoryTests {
 
         assertThat(exists).isTrue();
         assertThat(notExists).isFalse();
+    }
+
+    @Test
+    void whenFindByStatus_thenReturnReports() {
+        Report openReport1 = ReportFactory.createOpenReport("12345", "Open Report 1", "Detail 1");
+        Report openReport2 = ReportFactory.createOpenReport("67890", "Open Report 2", "Detail 2");
+        Report resolvedReport = ReportFactory.createOpenReport("11111", "Resolved Report", "Detail 3");
+        resolvedReport.setStatus(ReportStatus.RESOLVED);
+
+        entityManager.persist(openReport1);
+        entityManager.persist(openReport2);
+        entityManager.persist(resolvedReport);
+        entityManager.flush();
+
+        List<Report> openReports = reportRepository.findByStatus(ReportStatus.OPEN);
+        List<Report> resolvedReports = reportRepository.findByStatus(ReportStatus.RESOLVED);
+
+        assertThat(openReports).hasSize(2);
+        assertThat(openReports).allMatch(report -> ReportStatus.OPEN.equals(report.getStatus()));
+        assertThat(resolvedReports).hasSize(1);
+        assertThat(resolvedReports).allMatch(report -> ReportStatus.RESOLVED.equals(report.getStatus()));
     }
 }

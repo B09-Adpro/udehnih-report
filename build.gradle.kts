@@ -21,7 +21,7 @@ java {
 }
 
 springBoot {
-    mainClass = "udehnih.ReportApplication"
+    mainClass = "udehnih.report.ReportApplication"
 }
 
 configurations {
@@ -54,6 +54,7 @@ dependencies {
 
     implementation("jakarta.persistence:jakarta.persistence-api:3.1.0")
     runtimeOnly("com.h2database:h2")
+    implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
 }
 
 tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {

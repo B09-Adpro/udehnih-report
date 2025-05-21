@@ -6,6 +6,7 @@ import udehnih.report.factory.ReportFactory;
 import udehnih.report.dto.ReportRequestDto;
 import udehnih.report.dto.ReportResponseDto;
 import udehnih.report.dto.ReportMapper;
+import udehnih.report.enums.ReportStatus;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -35,13 +36,15 @@ public class ReportControllerTest {
     private ReportService reportService;
 
     @Test
-    void testGetReportsByStudentId() throws Exception {
+    void testGetUserReports() throws Exception {
         Report report = ReportFactory.createOpenReport("12345", "Test", "Test Detail");
         List<Report> reports = Collections.singletonList(report);
-        Mockito.when(reportService.getReportsByStudentId("12345")).thenReturn(reports);
+        Mockito.when(reportService.getUserReports("12345")).thenReturn(reports);
 
         mockMvc.perform(get("/api/reports")
-                .param("studentId", "12345"))
+                .param("studentId", "12345")
+                .header("X-User-Email", "test@example.com")
+                .header("X-User-Role", "STUDENT"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].studentId").value("12345"));
     }
@@ -70,7 +73,7 @@ public class ReportControllerTest {
                 .andExpect(jsonPath("$.studentId").value("12345"))
                 .andExpect(jsonPath("$.title").value("Test"))
                 .andExpect(jsonPath("$.detail").value("Test Detail"))
-                .andExpect(jsonPath("$.status").value("OPEN"));
+                .andExpect(jsonPath("$.status").value(ReportStatus.OPEN.name()));
     }
 
     @Test
@@ -97,7 +100,7 @@ public class ReportControllerTest {
                 .andExpect(jsonPath("$.studentId").value("12345"))
                 .andExpect(jsonPath("$.title").value("Updated Title"))
                 .andExpect(jsonPath("$.detail").value("Updated Detail"))
-                .andExpect(jsonPath("$.status").value("OPEN"));
+                .andExpect(jsonPath("$.status").value(ReportStatus.OPEN.name()));
     }
 
     @Test

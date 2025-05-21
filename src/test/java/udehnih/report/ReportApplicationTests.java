@@ -15,4 +15,9 @@ class ReportApplicationTests {
         ReportApplication.main(new String[] {});
     }
 
+    @Test
+    void defaultConstructor() {
+        new ReportApplication();
+    }
+
 }

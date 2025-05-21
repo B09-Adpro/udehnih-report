@@ -3,6 +3,7 @@ package udehnih.report.model;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.*;
+import udehnih.report.enums.ReportStatus;
 
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
@@ -30,8 +31,9 @@ public class Report {
     @Column(nullable = false)
     private String detail;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String status;
+    private ReportStatus status;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -41,6 +43,6 @@ public class Report {
     private LocalDateTime updatedAt;
 
     public boolean isOpen() {
-        return "OPEN".equals(this.status);
+        return ReportStatus.OPEN.equals(this.status);
     }
 }

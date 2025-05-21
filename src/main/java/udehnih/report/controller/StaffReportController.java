@@ -18,16 +18,16 @@ public class StaffReportController {
     @GetMapping
     public ResponseEntity<List<Report>> getAllReports() {
         List<Report> reports = reportService.getAllReports();
-        return ResponseEntity.ok(reports); // HTTP 200 OK
+        return ResponseEntity.ok(reports);
     }
 
-    @PutMapping("/{id}/resolve")
-    public ResponseEntity<Report> resolveReport(@PathVariable Integer id) {
+    @PutMapping("/{reportId}")
+    public ResponseEntity<Report> processReport(@PathVariable("reportId") Integer reportId) {
         try {
-            Report resolved = reportService.resolveReport(id);
-            return ResponseEntity.ok(resolved); // HTTP 200 OK
+            Report processed = reportService.processReport(reportId);
+            return ResponseEntity.ok(processed);
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build(); // HTTP 404
+            return ResponseEntity.notFound().build();
         }
     }
 }

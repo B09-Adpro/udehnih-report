@@ -3,6 +3,7 @@ package udehnih.report.controller;
 import udehnih.report.model.Report;
 import udehnih.report.service.ReportService;
 import udehnih.report.factory.ReportFactory;
+import udehnih.report.enums.ReportStatus;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -39,22 +40,22 @@ public class StaffReportControllerTest {
     }
 
     @Test
-    void testResolveReport() throws Exception {
-        Report dummy = ReportFactory.createClosedReport("12345", "Test", "Test Detail");
+    void testProcessReport() throws Exception {
+        Report dummy = ReportFactory.createInProgressReport("12345", "Test", "Test Detail");
 
-        when(reportService.resolveReport(1)).thenReturn(dummy);
+        when(reportService.processReport(1)).thenReturn(dummy);
 
-        mockMvc.perform(put("/api/staff/reports/1/resolve"))
+        mockMvc.perform(put("/api/staff/reports/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("CLOSED"));
+                .andExpect(jsonPath("$.status").value(ReportStatus.IN_PROGRESS.name()));
     }
 
     @Test
-    void testResolveReportNotFound() throws Exception {
-        Mockito.when(reportService.resolveReport(99))
+    void testProcessReportNotFound() throws Exception {
+        Mockito.when(reportService.processReport(99))
                .thenThrow(new RuntimeException("Report not found"));
 
-        mockMvc.perform(put("/api/staff/reports/99/resolve"))
+        mockMvc.perform(put("/api/staff/reports/99"))
                 .andExpect(status().isNotFound());
     }
 }

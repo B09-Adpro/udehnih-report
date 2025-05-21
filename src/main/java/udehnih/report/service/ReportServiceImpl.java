@@ -3,6 +3,7 @@ package udehnih.report.service;
 import udehnih.report.model.Report;
 import udehnih.report.repository.ReportRepository;
 import udehnih.report.factory.ReportFactory;
+import udehnih.report.enums.ReportStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,13 +23,13 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public List<Report> getReportsByStudentId(String studentId) {
+    public List<Report> getUserReports(String studentId) {
         return reportRepository.findByStudentId(studentId);
     }
 
     @Override
-    public Report updateReport(Integer id, Report updatedReport) {
-        Report report = reportRepository.findById(id)
+    public Report updateReport(Integer reportId, Report updatedReport) {
+        Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new RuntimeException("Report not found"));
 
         report.setTitle(updatedReport.getTitle());
@@ -38,8 +39,8 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public void deleteReport(Integer id) {
-        reportRepository.deleteById(id);
+    public void deleteReport(Integer reportId) {
+        reportRepository.deleteById(reportId);
     }
 
     @Override
@@ -48,13 +49,13 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public Report resolveReport(Integer id) {
-        Report report = reportRepository.findById(id)
+    public Report processReport(Integer reportId) {
+        Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new RuntimeException("Report not found"));
 
-        report.setStatus("CLOSED");
+        report.setStatus(ReportStatus.RESOLVED);
         report.setUpdatedAt(LocalDateTime.now());
 
         return reportRepository.save(report);
     }
-} 
+}
