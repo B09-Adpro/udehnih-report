@@ -5,9 +5,9 @@ import java.util.List;
 
 public interface ReportService {
     Report createReport(Report report);
-    List<Report> getReportsByStudentId(String studentId);
-    Report updateReport(Integer id, Report updatedReport);
-    void deleteReport(Integer id);
+    List<Report> getUserReports(String studentId);
+    Report updateReport(Integer reportId, Report updatedReport); 
+    void deleteReport(Integer reportId);
     List<Report> getAllReports();
-    Report resolveReport(Integer id);
+    Report processReport(Integer reportId);
 }
