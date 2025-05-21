@@ -2,6 +2,7 @@ package udehnih.report.dto;
 
 import org.junit.jupiter.api.Test;
 import udehnih.report.model.Report;
+import udehnih.report.enums.ReportStatus;
 
 import java.beans.Transient;
 import java.time.LocalDateTime;
@@ -41,7 +42,7 @@ class ReportMapperTest {
                 .studentId("stu2")
                 .title("t2")
                 .detail("d2")
-                .status("OPEN")
+                .status(ReportStatus.OPEN)
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
@@ -51,7 +52,7 @@ class ReportMapperTest {
         assertEquals("stu2", dto.getStudentId());
         assertEquals("t2", dto.getTitle());
         assertEquals("d2", dto.getDetail());
-        assertEquals("OPEN", dto.getStatus());
+        assertEquals(ReportStatus.OPEN, dto.getStatus());
         assertEquals(now, dto.getCreatedAt());
         assertEquals(now, dto.getUpdatedAt());
     }
@@ -80,14 +81,14 @@ class ReportMapperTest {
         dto.setStudentId("s");
         dto.setTitle("t");
         dto.setDetail("d");
-        dto.setStatus("OPEN");
+        dto.setStatus(ReportStatus.OPEN);
         dto.setCreatedAt(now);
         dto.setUpdatedAt(now);
         assertEquals(1, dto.getReportId());
         assertEquals("s", dto.getStudentId());
         assertEquals("t", dto.getTitle());
         assertEquals("d", dto.getDetail());
-        assertEquals("OPEN", dto.getStatus());
+        assertEquals(ReportStatus.OPEN, dto.getStatus());
         assertEquals(now, dto.getCreatedAt());
         assertEquals(now, dto.getUpdatedAt());
     }
