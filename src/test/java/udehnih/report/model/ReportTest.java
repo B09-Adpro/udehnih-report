@@ -2,6 +2,7 @@ package udehnih.report.model;
 
 import org.junit.jupiter.api.Test;
 import udehnih.report.factory.ReportFactory;
+import udehnih.report.enums.ReportStatus;
 import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -12,7 +13,7 @@ public class ReportTest {
         String studentId = "12345";
         String title = "Test Report";
         String detail = "This is a test report";
-        String status = "Pending";
+        ReportStatus status = ReportStatus.OPEN;
         LocalDateTime createdAt = LocalDateTime.now();
         LocalDateTime updatedAt = LocalDateTime.now();
 
@@ -53,7 +54,7 @@ public class ReportTest {
         String studentId = "12345";
         String title = "Test Report";
         String detail = "This is a test report";
-        String status = "Pending";
+        ReportStatus status = ReportStatus.OPEN;
         LocalDateTime createdAt = LocalDateTime.now();
         LocalDateTime updatedAt = LocalDateTime.now();
 
@@ -75,7 +76,7 @@ public class ReportTest {
         String studentId = "12345";
         String title = "Test Report";
         String detail = "This is a test report";
-        String status = "Pending";
+        ReportStatus status = ReportStatus.OPEN;
         LocalDateTime createdAt = LocalDateTime.now();
         LocalDateTime updatedAt = LocalDateTime.now();
 
@@ -123,7 +124,7 @@ public class ReportTest {
         assertTrue(toString.contains("12345"));
         assertTrue(toString.contains("Test Report"));
         assertTrue(toString.contains("This is a test report"));
-        assertTrue(toString.contains("OPEN"));
+        assertTrue(toString.contains(ReportStatus.OPEN.name()));
     }
 
     @Test
