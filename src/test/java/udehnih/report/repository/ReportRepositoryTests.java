@@ -1,7 +1,6 @@
 package udehnih.report.repository;
 
 import udehnih.report.model.Report;
-import udehnih.report.repository.ReportRepository;
 import udehnih.report.factory.ReportFactory;
 import udehnih.report.enums.ReportStatus;
 import org.junit.jupiter.api.Test;
@@ -9,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 

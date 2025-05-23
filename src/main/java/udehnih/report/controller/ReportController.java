@@ -2,7 +2,6 @@ package udehnih.report.controller;
 
 import udehnih.report.model.Report;
 import udehnih.report.service.ReportService;
-import udehnih.report.service.AuthService;
 import udehnih.report.dto.ReportRequestDto;
 import udehnih.report.dto.ReportResponseDto;
 import udehnih.report.dto.ReportMapper;
@@ -19,7 +18,6 @@ public class ReportController {
 
     @Autowired
     private ReportService reportService;
-    private AuthService authService;
 
     @PostMapping
     public ResponseEntity<ReportResponseDto> createReport(@RequestBody final ReportRequestDto request) {

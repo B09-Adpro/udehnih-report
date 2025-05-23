@@ -5,7 +5,6 @@ import udehnih.report.model.Report;
 import udehnih.report.enums.ReportStatus;
 import udehnih.report.enums.RejectionMessage;
 
-import java.beans.Transient;
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -18,16 +17,13 @@ class ReportMapperTest {
 
     @Test
     void toEntity_WithValidDto_ReturnsReport() {
-        // Arrange
         ReportRequestDto dto = new ReportRequestDto();
         dto.setStudentId("12345");
         dto.setTitle("Test Report");
         dto.setDetail("Test Detail");
 
-        // Act
         Report result = ReportMapper.toEntity(dto);
 
-        // Assert
         assertNotNull(result);
         assertEquals("12345", result.getStudentId());
         assertEquals("Test Report", result.getTitle());
@@ -41,7 +37,6 @@ class ReportMapperTest {
 
     @Test
     void toDto_WithValidReport_ReturnsDto() {
-        // Arrange
         LocalDateTime now = LocalDateTime.now();
         Report report = Report.builder()
                 .reportId(1)
@@ -53,10 +48,8 @@ class ReportMapperTest {
                 .updatedAt(now)
                 .build();
 
-        // Act
         ReportResponseDto result = ReportMapper.toDto(report);
 
-        // Assert
         assertNotNull(result);
         assertEquals(1, result.getReportId());
         assertEquals("12345", result.getStudentId());
@@ -71,7 +64,6 @@ class ReportMapperTest {
 
     @Test
     void toDto_WithRejectedReport_ReturnsDtoWithRejectionMessage() {
-        // Arrange
         LocalDateTime now = LocalDateTime.now();
         Report report = Report.builder()
                 .reportId(1)
@@ -84,10 +76,8 @@ class ReportMapperTest {
                 .updatedAt(now)
                 .build();
 
-        // Act
         ReportResponseDto result = ReportMapper.toDto(report);
 
-        // Assert
         assertNotNull(result);
         assertEquals(1, result.getReportId());
         assertEquals("12345", result.getStudentId());
@@ -107,7 +97,6 @@ class ReportMapperTest {
 
     @Test
     void toDto_WithNullRejectionMessage_ReturnsNullRejectionFields() {
-        // Arrange
         LocalDateTime now = LocalDateTime.now();
         Report report = Report.builder()
                 .reportId(1)
@@ -120,10 +109,8 @@ class ReportMapperTest {
                 .updatedAt(now)
                 .build();
 
-        // Act
         ReportResponseDto result = ReportMapper.toDto(report);
 
-        // Assert
         assertNotNull(result);
         assertNull(result.getRejectionMessage());
         assertNull(result.getRejectionMessageText());

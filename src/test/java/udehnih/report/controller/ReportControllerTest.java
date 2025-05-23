@@ -47,7 +47,6 @@ public class ReportControllerTest {
 
     @Test
     void getUserReports_WithValidStudentRole_ReturnsReports() throws Exception {
-        // Arrange
         String studentId = "12345";
         List<Report> reports = Arrays.asList(
             ReportFactory.createOpenReport(studentId, "Test Report 1", "Detail 1"),
@@ -55,7 +54,6 @@ public class ReportControllerTest {
         );
         when(reportService.getUserReports(studentId)).thenReturn(reports);
 
-        // Act & Assert
         mockMvc.perform(get("/api/reports")
                 .param("studentId", studentId)
                 .header("X-User-Email", "student@example.com")
@@ -69,7 +67,6 @@ public class ReportControllerTest {
 
     @Test
     void getUserReports_WithNonStudentRole_ReturnsBadRequest() throws Exception {
-        // Act & Assert
         mockMvc.perform(get("/api/reports")
                 .param("studentId", "12345")
                 .header("X-User-Email", "staff@example.com")
@@ -79,7 +76,6 @@ public class ReportControllerTest {
 
     @Test
     void getUserReports_WithMissingStudentId_ReturnsBadRequest() throws Exception {
-        // Act & Assert
         mockMvc.perform(get("/api/reports")
                 .header("X-User-Email", "student@example.com")
                 .header("X-User-Role", "STUDENT"))
@@ -88,7 +84,6 @@ public class ReportControllerTest {
 
     @Test
     void getUserReports_WithEmptyStudentId_ReturnsBadRequest() throws Exception {
-        // Act & Assert
         mockMvc.perform(get("/api/reports")
                 .param("studentId", "")
                 .header("X-User-Email", "student@example.com")
@@ -98,7 +93,6 @@ public class ReportControllerTest {
 
     @Test
     void createReport_WithValidRequest_ReturnsCreated() throws Exception {
-        // Arrange
         ReportRequestDto request = new ReportRequestDto();
         request.setStudentId("12345");
         request.setTitle("Test Report");
@@ -107,7 +101,6 @@ public class ReportControllerTest {
         Report created = ReportFactory.createOpenReport("12345", "Test Report", "Test Detail");
         when(reportService.createReport(any(Report.class))).thenReturn(created);
 
-        // Act & Assert
         mockMvc.perform(post("/api/reports")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
@@ -120,7 +113,6 @@ public class ReportControllerTest {
 
     @Test
     void updateReport_WithValidRequest_ReturnsOk() throws Exception {
-        // Arrange
         Integer reportId = 1;
         ReportRequestDto request = new ReportRequestDto();
         request.setStudentId("12345");
@@ -130,7 +122,6 @@ public class ReportControllerTest {
         Report updated = ReportFactory.createOpenReport("12345", "Updated Report", "Updated Detail");
         when(reportService.updateReport(eq(reportId), any(Report.class))).thenReturn(updated);
 
-        // Act & Assert
         mockMvc.perform(put("/api/reports/{reportId}", reportId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
@@ -142,7 +133,6 @@ public class ReportControllerTest {
 
     @Test
     void updateReport_WithNonExistentReport_ReturnsNotFound() throws Exception {
-        // Arrange
         Integer reportId = 999;
         ReportRequestDto request = new ReportRequestDto();
         request.setStudentId("12345");
@@ -152,7 +142,6 @@ public class ReportControllerTest {
         when(reportService.updateReport(eq(reportId), any(Report.class)))
                 .thenThrow(new RuntimeException("Report not found"));
 
-        // Act & Assert
         mockMvc.perform(put("/api/reports/{reportId}", reportId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
@@ -161,23 +150,19 @@ public class ReportControllerTest {
 
     @Test
     void deleteReport_WithValidId_ReturnsNoContent() throws Exception {
-        // Arrange
         Integer reportId = 1;
         doNothing().when(reportService).deleteReport(reportId);
 
-        // Act & Assert
         mockMvc.perform(delete("/api/reports/{reportId}", reportId))
                 .andExpect(status().isNoContent());
     }
 
     @Test
     void deleteReport_WithNonExistentReport_ReturnsNotFound() throws Exception {
-        // Arrange
         Integer reportId = 999;
         doThrow(new RuntimeException("Report not found"))
                 .when(reportService).deleteReport(reportId);
 
-        // Act & Assert
         mockMvc.perform(delete("/api/reports/{reportId}", reportId))
                 .andExpect(status().isNotFound());
     }

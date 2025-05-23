@@ -13,7 +13,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -36,7 +35,6 @@ public class ReportServiceTest {
 
     @Test
     void createReport_ShouldCreateOpenReport() {
-        // Arrange
         Report inputReport = Report.builder()
                 .studentId("12345")
                 .title("Test Report")
@@ -51,11 +49,9 @@ public class ReportServiceTest {
                 .build();
         
         when(reportRepository.save(any(Report.class))).thenReturn(expectedReport);
-
-        // Act
+        
         Report result = reportService.createReport(inputReport);
 
-        // Assert
         assertNotNull(result);
         assertEquals(ReportStatus.OPEN, result.getStatus());
         verify(reportRepository).save(any(Report.class));
@@ -63,7 +59,6 @@ public class ReportServiceTest {
 
     @Test
     void getUserReports_ShouldReturnUserReports() {
-        // Arrange
         String studentId = "12345";
         List<Report> expectedReports = Arrays.asList(
             ReportFactory.createOpenReport(studentId, "Report 1", "Detail 1"),
@@ -71,10 +66,8 @@ public class ReportServiceTest {
         );
         when(reportRepository.findByStudentId(studentId)).thenReturn(expectedReports);
 
-        // Act
         List<Report> result = reportService.getUserReports(studentId);
 
-        // Assert
         assertEquals(2, result.size());
         assertEquals(studentId, result.get(0).getStudentId());
         verify(reportRepository).findByStudentId(studentId);
@@ -82,7 +75,6 @@ public class ReportServiceTest {
 
     @Test
     void updateReport_WithValidReport_ShouldUpdateSuccessfully() {
-        // Arrange
         Integer reportId = 1;
         Report existingReport = ReportFactory.createOpenReport("12345", "Old Title", "Old Detail");
         Report updatedReport = ReportFactory.createOpenReport("12345", "New Title", "New Detail");
@@ -90,10 +82,8 @@ public class ReportServiceTest {
         when(reportRepository.findById(reportId)).thenReturn(Optional.of(existingReport));
         when(reportRepository.save(any(Report.class))).thenAnswer(i -> i.getArgument(0));
 
-        // Act
         Report result = reportService.updateReport(reportId, updatedReport);
 
-        // Assert
         assertEquals("New Title", result.getTitle());
         assertEquals("New Detail", result.getDetail());
         assertNotNull(result.getUpdatedAt());
@@ -102,12 +92,10 @@ public class ReportServiceTest {
 
     @Test
     void updateReport_WithNonExistentReport_ShouldThrowException() {
-        // Arrange
         Integer reportId = 999;
         Report updatedReport = ReportFactory.createOpenReport("12345", "New Title", "New Detail");
         when(reportRepository.findById(reportId)).thenReturn(Optional.empty());
 
-        // Act & Assert
         Exception exception = assertThrows(RuntimeException.class, () -> {
             reportService.updateReport(reportId, updatedReport);
         });
@@ -116,7 +104,6 @@ public class ReportServiceTest {
 
     @Test
     void processReport_WithValidRejection_ShouldRejectReport() {
-        // Arrange
         Integer reportId = 1;
         Report existingReport = ReportFactory.createOpenReport("12345", "Test", "Detail");
         RejectionRequestDto rejectionRequest = new RejectionRequestDto();
@@ -125,28 +112,23 @@ public class ReportServiceTest {
         when(reportRepository.findById(reportId)).thenReturn(Optional.of(existingReport));
         when(reportRepository.save(any(Report.class))).thenAnswer(i -> i.getArgument(0));
 
-        // Act
         Report result = reportService.processReport(reportId, rejectionRequest);
 
-        // Assert
         assertEquals(ReportStatus.REJECTED, result.getStatus());
         assertEquals(RejectionMessage.INCOMPLETE_DETAIL, result.getRejectionMessage());
-        verify(reportRepository, times(2)).save(any(Report.class)); // Two saves: one for rejection message, one for status
+        verify(reportRepository, times(2)).save(any(Report.class));
     }
 
     @Test
     void processReport_WithNoRejection_ShouldResolveReport() {
-        // Arrange
         Integer reportId = 1;
         Report existingReport = ReportFactory.createOpenReport("12345", "Test", "Detail");
         
         when(reportRepository.findById(reportId)).thenReturn(Optional.of(existingReport));
         when(reportRepository.save(any(Report.class))).thenAnswer(i -> i.getArgument(0));
 
-        // Act
         Report result = reportService.processReport(reportId, null);
 
-        // Assert
         assertEquals(ReportStatus.RESOLVED, result.getStatus());
         assertNull(result.getRejectionMessage());
         verify(reportRepository).save(any(Report.class));
@@ -154,11 +136,9 @@ public class ReportServiceTest {
 
     @Test
     void processReport_WithNonExistentReport_ShouldThrowException() {
-        // Arrange
         Integer reportId = 999;
         when(reportRepository.findById(reportId)).thenReturn(Optional.empty());
 
-        // Act & Assert
         Exception exception = assertThrows(RuntimeException.class, () -> {
             reportService.processReport(reportId, null);
         });
@@ -167,7 +147,6 @@ public class ReportServiceTest {
 
     @Test
     void processReport_WithNonOpenReport_ShouldThrowException() {
-        // Arrange
         Integer reportId = 1;
         Report existingReport = Report.builder()
                 .reportId(reportId)
@@ -179,7 +158,6 @@ public class ReportServiceTest {
         
         when(reportRepository.findById(reportId)).thenReturn(Optional.of(existingReport));
 
-        // Act & Assert
         Exception exception = assertThrows(RuntimeException.class, () -> {
             reportService.processReport(reportId, null);
         });
@@ -188,18 +166,15 @@ public class ReportServiceTest {
 
     @Test
     void processReport_WithEmptyRejectionMessage_ShouldResolveReport() {
-        // Arrange
         Integer reportId = 1;
         Report existingReport = ReportFactory.createOpenReport("12345", "Test", "Detail");
-        RejectionRequestDto rejectionRequest = new RejectionRequestDto(); // Empty rejection message
+        RejectionRequestDto rejectionRequest = new RejectionRequestDto();
         
         when(reportRepository.findById(reportId)).thenReturn(Optional.of(existingReport));
         when(reportRepository.save(any(Report.class))).thenAnswer(i -> i.getArgument(0));
 
-        // Act
         Report result = reportService.processReport(reportId, rejectionRequest);
 
-        // Assert
         assertEquals(ReportStatus.RESOLVED, result.getStatus());
         assertNull(result.getRejectionMessage());
         verify(reportRepository).save(any(Report.class));
@@ -207,30 +182,24 @@ public class ReportServiceTest {
 
     @Test
     void deleteReport_ShouldCallRepositoryDelete() {
-        // Arrange
         Integer reportId = 1;
         doNothing().when(reportRepository).deleteById(reportId);
 
-        // Act
         reportService.deleteReport(reportId);
 
-        // Assert
         verify(reportRepository).deleteById(reportId);
     }
 
     @Test
     void getAllReports_ShouldReturnAllReports() {
-        // Arrange
         List<Report> expectedReports = Arrays.asList(
             ReportFactory.createOpenReport("12345", "Report 1", "Detail 1"),
             ReportFactory.createOpenReport("67890", "Report 2", "Detail 2")
         );
         when(reportRepository.findAll()).thenReturn(expectedReports);
 
-        // Act
         List<Report> result = reportService.getAllReports();
 
-        // Assert
         assertEquals(2, result.size());
         verify(reportRepository).findAll();
     }

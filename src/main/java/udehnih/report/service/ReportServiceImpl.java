@@ -65,12 +65,10 @@ public class ReportServiceImpl implements ReportService {
         LocalDateTime now = LocalDateTime.now();
         
         if (rejectionRequest != null && rejectionRequest.getRejectionMessage() != null) {
-            // First update rejection message
             report.setRejectionMessage(rejectionRequest.getRejectionMessage());
             report.setUpdatedAt(now);
             reportRepository.save(report);
             
-            // Then update status
             report.setStatus(ReportStatus.REJECTED);
             report.setUpdatedAt(now);
         } else {

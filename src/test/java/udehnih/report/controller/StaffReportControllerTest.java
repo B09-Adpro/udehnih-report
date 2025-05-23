@@ -15,7 +15,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Collections;
@@ -32,9 +31,6 @@ public class StaffReportControllerTest {
     @MockBean
     private ReportService reportService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @Test
     void testGetAllReports() throws Exception {
         Mockito.when(reportService.getAllReports())
@@ -47,7 +43,7 @@ public class StaffReportControllerTest {
     @Test
     void testProcessReport() throws Exception {
         Report dummy = ReportFactory.createInProgressReport("12345", "Test", "Test Detail");
-        RejectionRequestDto rejectionRequest = null; // For approval case
+        RejectionRequestDto rejectionRequest = null;
 
         when(reportService.processReport(1, rejectionRequest)).thenReturn(dummy);
 
