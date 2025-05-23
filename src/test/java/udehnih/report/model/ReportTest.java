@@ -3,6 +3,7 @@ package udehnih.report.model;
 import org.junit.jupiter.api.Test;
 import udehnih.report.factory.ReportFactory;
 import udehnih.report.enums.ReportStatus;
+import udehnih.report.enums.RejectionMessage;
 import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -14,6 +15,7 @@ public class ReportTest {
         String title = "Test Report";
         String detail = "This is a test report";
         ReportStatus status = ReportStatus.OPEN;
+        RejectionMessage rejectionMessage = RejectionMessage.INCOMPLETE_DETAIL;
         LocalDateTime createdAt = LocalDateTime.now();
         LocalDateTime updatedAt = LocalDateTime.now();
 
@@ -23,6 +25,7 @@ public class ReportTest {
                 .title(title)
                 .detail(detail)
                 .status(status)
+                .rejectionMessage(rejectionMessage)
                 .createdAt(createdAt)
                 .updatedAt(updatedAt)
                 .build();
@@ -32,6 +35,7 @@ public class ReportTest {
         assertEquals(title, report.getTitle());
         assertEquals(detail, report.getDetail());
         assertEquals(status, report.getStatus());
+        assertEquals(rejectionMessage, report.getRejectionMessage());
         assertEquals(createdAt, report.getCreatedAt());
         assertEquals(updatedAt, report.getUpdatedAt());
     }
@@ -44,6 +48,7 @@ public class ReportTest {
         assertNull(report.getTitle());
         assertNull(report.getDetail());
         assertNull(report.getStatus());
+        assertNull(report.getRejectionMessage());
         assertNull(report.getCreatedAt());
         assertNull(report.getUpdatedAt());
     }
