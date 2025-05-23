@@ -6,6 +6,8 @@ import udehnih.report.factory.ReportFactory;
 import udehnih.report.enums.ReportStatus;
 import udehnih.report.dto.RejectionRequestDto;
 import udehnih.report.enums.RejectionMessage;
+import udehnih.report.exception.ReportNotFoundException;
+import udehnih.report.exception.InvalidReportStateException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -100,10 +102,10 @@ public class ReportServiceTest {
         Report updatedReport = ReportFactory.createOpenReport("12345", "New Title", "New Detail");
         when(reportRepository.findById(reportId)).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(RuntimeException.class, () -> {
+        Exception exception = assertThrows(ReportNotFoundException.class, () -> {
             reportService.updateReport(reportId, updatedReport);
         });
-        assertEquals("Report not found", exception.getMessage());
+        assertEquals("Report not found with id: " + reportId, exception.getMessage());
     }
 
     @Test
@@ -143,10 +145,10 @@ public class ReportServiceTest {
         Integer reportId = 999;
         when(reportRepository.findById(reportId)).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(RuntimeException.class, () -> {
+        Exception exception = assertThrows(ReportNotFoundException.class, () -> {
             reportService.processReport(reportId, null);
         });
-        assertEquals("Report not found", exception.getMessage());
+        assertEquals("Report not found with id: " + reportId, exception.getMessage());
     }
 
     @Test
@@ -162,7 +164,7 @@ public class ReportServiceTest {
         
         when(reportRepository.findById(reportId)).thenReturn(Optional.of(existingReport));
 
-        Exception exception = assertThrows(RuntimeException.class, () -> {
+        Exception exception = assertThrows(InvalidReportStateException.class, () -> {
             reportService.processReport(reportId, null);
         });
         assertEquals("Report cannot be processed because it is not in OPEN status", exception.getMessage());
