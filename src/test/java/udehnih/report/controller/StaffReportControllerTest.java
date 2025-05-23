@@ -4,6 +4,8 @@ import udehnih.report.model.Report;
 import udehnih.report.service.ReportService;
 import udehnih.report.factory.ReportFactory;
 import udehnih.report.enums.ReportStatus;
+import udehnih.report.dto.RejectionRequestDto;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -30,6 +32,9 @@ public class StaffReportControllerTest {
     @MockBean
     private ReportService reportService;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @Test
     void testGetAllReports() throws Exception {
         Mockito.when(reportService.getAllReports())
@@ -42,8 +47,9 @@ public class StaffReportControllerTest {
     @Test
     void testProcessReport() throws Exception {
         Report dummy = ReportFactory.createInProgressReport("12345", "Test", "Test Detail");
+        RejectionRequestDto rejectionRequest = null; // For approval case
 
-        when(reportService.processReport(1)).thenReturn(dummy);
+        when(reportService.processReport(1, rejectionRequest)).thenReturn(dummy);
 
         mockMvc.perform(put("/api/staff/reports/1"))
                 .andExpect(status().isOk())
@@ -52,7 +58,7 @@ public class StaffReportControllerTest {
 
     @Test
     void testProcessReportNotFound() throws Exception {
-        Mockito.when(reportService.processReport(99))
+        Mockito.when(reportService.processReport(99, null))
                .thenThrow(new RuntimeException("Report not found"));
 
         mockMvc.perform(put("/api/staff/reports/99"))
