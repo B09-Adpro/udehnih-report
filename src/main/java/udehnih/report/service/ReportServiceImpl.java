@@ -5,6 +5,8 @@ import udehnih.report.repository.ReportRepository;
 import udehnih.report.factory.ReportFactory;
 import udehnih.report.enums.ReportStatus;
 import udehnih.report.dto.RejectionRequestDto;
+import udehnih.report.exception.ReportNotFoundException;
+import udehnih.report.exception.InvalidReportStateException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
@@ -36,7 +38,7 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public Report updateReport(Integer reportId, Report updatedReport) {
         Report report = reportRepository.findById(reportId)
-                .orElseThrow(() -> new RuntimeException("Report not found"));
+                .orElseThrow(() -> new ReportNotFoundException("Report not found with id: " + reportId));
 
         report.setTitle(updatedReport.getTitle());
         report.setDetail(updatedReport.getDetail());
@@ -60,10 +62,10 @@ public class ReportServiceImpl implements ReportService {
     @Modifying
     public Report processReport(Integer reportId, RejectionRequestDto rejectionRequest) {
         Report report = reportRepository.findById(reportId)
-                .orElseThrow(() -> new RuntimeException("Report not found"));
+                .orElseThrow(() -> new ReportNotFoundException("Report not found with id: " + reportId));
 
         if (!report.isOpen()) {
-            throw new RuntimeException("Report cannot be processed because it is not in OPEN status");
+            throw new InvalidReportStateException("Report cannot be processed because it is not in OPEN status");
         }
 
         LocalDateTime now = LocalDateTime.now();
