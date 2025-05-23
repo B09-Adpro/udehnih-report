@@ -2,6 +2,7 @@ package udehnih.report.dto;
 
 import lombok.Data;
 import udehnih.report.enums.ReportStatus;
+import udehnih.report.enums.RejectionMessage;
 import java.time.LocalDateTime;
 
 @Data
@@ -11,6 +12,7 @@ public class ReportResponseDto {
     private String title;
     private String detail;
     private ReportStatus status;
+    private RejectionMessage rejectionMessage;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 } 
