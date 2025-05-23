@@ -9,9 +9,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.scheduling.annotation.Async;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class ReportServiceImpl implements ReportService {
@@ -26,8 +28,10 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public List<Report> getUserReports(String studentId) {
-        return reportRepository.findByStudentId(studentId);
+    @Async("reportTaskExecutor")
+    public CompletableFuture<List<Report>> getUserReports(String studentId) {
+        List<Report> reports = reportRepository.findByStudentId(studentId);
+        return CompletableFuture.completedFuture(reports);
     }
 
     @Override
@@ -47,8 +51,10 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public List<Report> getAllReports() {
-        return reportRepository.findAll();
+    @Async("reportTaskExecutor")
+    public CompletableFuture<List<Report>> getAllReports() {
+        List<Report> reports = reportRepository.findAll();
+        return CompletableFuture.completedFuture(reports);
     }
 
     @Override
