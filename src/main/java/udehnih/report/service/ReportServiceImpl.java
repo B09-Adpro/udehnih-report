@@ -4,6 +4,7 @@ import udehnih.report.model.Report;
 import udehnih.report.repository.ReportRepository;
 import udehnih.report.factory.ReportFactory;
 import udehnih.report.enums.ReportStatus;
+import udehnih.report.dto.RejectionRequestDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -49,13 +50,18 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public Report processReport(Integer reportId) {
+    public Report processReport(Integer reportId, RejectionRequestDto rejectionRequest) {
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new RuntimeException("Report not found"));
 
-        report.setStatus(ReportStatus.RESOLVED);
+        if (rejectionRequest != null && rejectionRequest.getRejectionMessage() != null) {
+            report.setStatus(ReportStatus.REJECTED);
+            report.setRejectionMessage(rejectionRequest.getRejectionMessage());
+        } else {
+            report.setStatus(ReportStatus.RESOLVED);
+        }
+        
         report.setUpdatedAt(LocalDateTime.now());
-
         return reportRepository.save(report);
     }
 }
