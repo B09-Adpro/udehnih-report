@@ -30,8 +30,7 @@ public class ReportServiceImpl implements ReportService {
     @Override
     @Async("reportTaskExecutor")
     public CompletableFuture<List<Report>> getUserReports(String studentId) {
-        List<Report> reports = reportRepository.findByStudentId(studentId);
-        return CompletableFuture.completedFuture(reports);
+        return reportRepository.findByStudentId(studentId);
     }
 
     @Override
@@ -53,8 +52,7 @@ public class ReportServiceImpl implements ReportService {
     @Override
     @Async("reportTaskExecutor")
     public CompletableFuture<List<Report>> getAllReports() {
-        List<Report> reports = reportRepository.findAll();
-        return CompletableFuture.completedFuture(reports);
+        return reportRepository.findAllAsync();
     }
 
     @Override
