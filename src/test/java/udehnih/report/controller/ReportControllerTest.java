@@ -21,6 +21,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.Collections;
 import java.util.Arrays;
@@ -52,10 +53,14 @@ public class ReportControllerTest {
         when(reportService.getUserReports(studentId))
             .thenReturn(CompletableFuture.completedFuture(reports));
 
-        mockMvc.perform(get("/api/reports")
+        MvcResult result = mockMvc.perform(get("/api/reports")
                 .param("studentId", studentId)
                 .header("X-User-Email", "student@example.com")
                 .header("X-User-Role", "STUDENT"))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(result))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].studentId").value(studentId))
                 .andExpect(jsonPath("$[1].studentId").value(studentId))

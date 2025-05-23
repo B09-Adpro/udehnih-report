@@ -14,6 +14,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
@@ -36,7 +37,11 @@ public class StaffReportControllerTest {
         when(reportService.getAllReports())
             .thenReturn(CompletableFuture.completedFuture(Collections.emptyList()));
 
-        mockMvc.perform(get("/api/staff/reports"))
+        MvcResult result = mockMvc.perform(get("/api/staff/reports"))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(result))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$").isEmpty());
