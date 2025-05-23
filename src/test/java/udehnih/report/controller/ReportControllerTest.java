@@ -7,6 +7,7 @@ import udehnih.report.dto.ReportRequestDto;
 import udehnih.report.dto.ReportResponseDto;
 import udehnih.report.dto.ReportMapper;
 import udehnih.report.enums.ReportStatus;
+import udehnih.report.config.TestConfig;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -19,9 +20,12 @@ import static org.mockito.Mockito.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.util.Collections;
 import java.util.Arrays;
@@ -32,6 +36,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ReportController.class)
+@Import(TestConfig.class)
 public class ReportControllerTest {
 
     @Autowired
@@ -53,15 +58,17 @@ public class ReportControllerTest {
         when(reportService.getUserReports(studentId))
             .thenReturn(CompletableFuture.completedFuture(reports));
 
-        MvcResult result = mockMvc.perform(get("/api/reports")
+        MvcResult mvcResult = mockMvc.perform(get("/api/reports")
                 .param("studentId", studentId)
                 .header("X-User-Email", "student@example.com")
                 .header("X-User-Role", "STUDENT"))
                 .andExpect(request().asyncStarted())
                 .andReturn();
 
-        mockMvc.perform(asyncDispatch(result))
+        mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].studentId").value(studentId))
                 .andExpect(jsonPath("$[1].studentId").value(studentId))
                 .andExpect(jsonPath("$[0].title").value("Test Report 1"))
@@ -70,27 +77,39 @@ public class ReportControllerTest {
 
     @Test
     void getUserReports_WithNonStudentRole_ReturnsBadRequest() throws Exception {
-        mockMvc.perform(get("/api/reports")
+        MvcResult mvcResult = mockMvc.perform(get("/api/reports")
                 .param("studentId", "12345")
                 .header("X-User-Email", "staff@example.com")
                 .header("X-User-Role", "STAFF"))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     void getUserReports_WithMissingStudentId_ReturnsBadRequest() throws Exception {
-        mockMvc.perform(get("/api/reports")
+        MvcResult mvcResult = mockMvc.perform(get("/api/reports")
                 .header("X-User-Email", "student@example.com")
                 .header("X-User-Role", "STUDENT"))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     void getUserReports_WithEmptyStudentId_ReturnsBadRequest() throws Exception {
-        mockMvc.perform(get("/api/reports")
+        MvcResult mvcResult = mockMvc.perform(get("/api/reports")
                 .param("studentId", "")
                 .header("X-User-Email", "student@example.com")
                 .header("X-User-Role", "STUDENT"))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isBadRequest());
     }
 
