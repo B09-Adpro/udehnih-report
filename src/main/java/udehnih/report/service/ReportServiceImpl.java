@@ -7,6 +7,7 @@ import udehnih.report.enums.ReportStatus;
 import udehnih.report.dto.RejectionRequestDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import jakarta.transaction.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -50,18 +51,26 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
+    @Transactional
     public Report processReport(Integer reportId, RejectionRequestDto rejectionRequest) {
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new RuntimeException("Report not found"));
 
+        if (!report.isOpen()) {
+            throw new RuntimeException("Report cannot be processed because it is not in OPEN status");
+        }
+
         if (rejectionRequest != null && rejectionRequest.getRejectionMessage() != null) {
-            report.setStatus(ReportStatus.REJECTED);
             report.setRejectionMessage(rejectionRequest.getRejectionMessage());
+            report.setStatus(ReportStatus.REJECTED);
         } else {
             report.setStatus(ReportStatus.RESOLVED);
+            report.setRejectionMessage(null);
         }
         
         report.setUpdatedAt(LocalDateTime.now());
-        return reportRepository.save(report);
+        
+        // The entity is already managed by JPA, no need to call save
+        return report;
     }
 }
