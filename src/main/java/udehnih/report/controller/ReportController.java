@@ -27,27 +27,24 @@ public class ReportController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getUserReports(
+    public CompletableFuture<ResponseEntity<List<ReportResponseDto>>> getUserReports(
         @RequestParam(required = false) String studentId,
         @RequestHeader("X-User-Email") String userEmail,
         @RequestHeader("X-User-Role") String userRole) {
 
         if (!userRole.equals("STUDENT")) {
-            return ResponseEntity.badRequest().build();
+            return CompletableFuture.completedFuture(ResponseEntity.badRequest().build());
         }
         
         if (studentId == null || studentId.trim().isEmpty()) {
-            return ResponseEntity.badRequest().build();
+            return CompletableFuture.completedFuture(ResponseEntity.badRequest().build());
         }
 
-        CompletableFuture<List<Report>> futureReports = reportService.getUserReports(studentId);
-        CompletableFuture<ResponseEntity<List<ReportResponseDto>>> response = futureReports
+        return reportService.getUserReports(studentId)
             .thenApply(reports -> reports.stream()
                 .map(ReportMapper::toDto)
                 .collect(Collectors.toList()))
             .thenApply(ResponseEntity::ok);
-
-        return ResponseEntity.ok().body(response);
     }
 
     @PutMapping("/{reportId}")
