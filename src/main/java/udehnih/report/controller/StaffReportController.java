@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @RestController
@@ -20,12 +21,12 @@ public class StaffReportController {
     private ReportService reportService;
 
     @GetMapping
-    public ResponseEntity<List<ReportResponseDto>> getAllReports() {
-        List<Report> reports = reportService.getAllReports();
-        List<ReportResponseDto> dtos = reports.stream()
-            .map(ReportMapper::toDto)
-            .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
+    public CompletableFuture<ResponseEntity<List<ReportResponseDto>>> getAllReports() {
+        return reportService.getAllReports()
+            .thenApply(reports -> reports.stream()
+                .map(ReportMapper::toDto)
+                .collect(Collectors.toList()))
+            .thenApply(ResponseEntity::ok);
     }
 
     @PutMapping("/{reportId}")
