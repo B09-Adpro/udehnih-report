@@ -13,6 +13,7 @@ public class ReportResponseDto {
     private String detail;
     private ReportStatus status;
     private RejectionMessage rejectionMessage;
+    private String rejectionMessageText;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 } 
