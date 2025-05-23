@@ -9,18 +9,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Collections;
+import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(StaffReportController.class)
 public class StaffReportControllerTest {
@@ -32,12 +32,14 @@ public class StaffReportControllerTest {
     private ReportService reportService;
 
     @Test
-    void testGetAllReports() throws Exception {
-        Mockito.when(reportService.getAllReports())
-                .thenReturn(Collections.emptyList());
+    void getAllReports_ReturnsEmptyList() throws Exception {
+        when(reportService.getAllReports())
+            .thenReturn(CompletableFuture.completedFuture(Collections.emptyList()));
 
         mockMvc.perform(get("/api/staff/reports"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$").isEmpty());
     }
 
     @Test

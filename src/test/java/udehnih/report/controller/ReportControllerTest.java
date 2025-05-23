@@ -2,7 +2,6 @@ package udehnih.report.controller;
 
 import udehnih.report.model.Report;
 import udehnih.report.service.ReportService;
-import udehnih.report.service.AuthService;
 import udehnih.report.factory.ReportFactory;
 import udehnih.report.dto.ReportRequestDto;
 import udehnih.report.dto.ReportResponseDto;
@@ -26,6 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.Collections;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -39,9 +39,6 @@ public class ReportControllerTest {
     @MockBean
     private ReportService reportService;
 
-    @MockBean
-    private AuthService authService;
-
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -52,7 +49,8 @@ public class ReportControllerTest {
             ReportFactory.createOpenReport(studentId, "Test Report 1", "Detail 1"),
             ReportFactory.createOpenReport(studentId, "Test Report 2", "Detail 2")
         );
-        when(reportService.getUserReports(studentId)).thenReturn(reports);
+        when(reportService.getUserReports(studentId))
+            .thenReturn(CompletableFuture.completedFuture(reports));
 
         mockMvc.perform(get("/api/reports")
                 .param("studentId", studentId)

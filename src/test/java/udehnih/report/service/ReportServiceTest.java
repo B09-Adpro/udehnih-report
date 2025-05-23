@@ -16,6 +16,8 @@ import org.mockito.MockitoAnnotations;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -58,15 +60,17 @@ public class ReportServiceTest {
     }
 
     @Test
-    void getUserReports_ShouldReturnUserReports() {
+    void getUserReports_ShouldReturnUserReports() throws ExecutionException, InterruptedException {
         String studentId = "12345";
         List<Report> expectedReports = Arrays.asList(
             ReportFactory.createOpenReport(studentId, "Report 1", "Detail 1"),
             ReportFactory.createOpenReport(studentId, "Report 2", "Detail 2")
         );
-        when(reportRepository.findByStudentId(studentId)).thenReturn(expectedReports);
+        when(reportRepository.findByStudentId(studentId))
+            .thenReturn(CompletableFuture.completedFuture(expectedReports));
 
-        List<Report> result = reportService.getUserReports(studentId);
+        CompletableFuture<List<Report>> futureResult = reportService.getUserReports(studentId);
+        List<Report> result = futureResult.get(); // Wait for the async operation to complete
 
         assertEquals(2, result.size());
         assertEquals(studentId, result.get(0).getStudentId());
@@ -191,16 +195,18 @@ public class ReportServiceTest {
     }
 
     @Test
-    void getAllReports_ShouldReturnAllReports() {
+    void getAllReports_ShouldReturnAllReports() throws ExecutionException, InterruptedException {
         List<Report> expectedReports = Arrays.asList(
             ReportFactory.createOpenReport("12345", "Report 1", "Detail 1"),
             ReportFactory.createOpenReport("67890", "Report 2", "Detail 2")
         );
-        when(reportRepository.findAll()).thenReturn(expectedReports);
+        when(reportRepository.findAllAsync())
+            .thenReturn(CompletableFuture.completedFuture(expectedReports));
 
-        List<Report> result = reportService.getAllReports();
+        CompletableFuture<List<Report>> futureResult = reportService.getAllReports();
+        List<Report> result = futureResult.get(); // Wait for the async operation to complete
 
         assertEquals(2, result.size());
-        verify(reportRepository).findAll();
+        verify(reportRepository).findAllAsync();
     }
 }
