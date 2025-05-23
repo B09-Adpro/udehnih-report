@@ -33,7 +33,7 @@ public class Report {
     private String detail;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "varchar(255) check (status in ('OPEN', 'CLOSED', 'IN_PROGRESS', 'RESOLVED', 'REJECTED'))")
     private ReportStatus status;
 
     @Enumerated(EnumType.STRING)
