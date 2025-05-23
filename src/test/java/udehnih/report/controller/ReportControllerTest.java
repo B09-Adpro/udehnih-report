@@ -8,6 +8,7 @@ import udehnih.report.dto.ReportResponseDto;
 import udehnih.report.dto.ReportMapper;
 import udehnih.report.enums.ReportStatus;
 import udehnih.report.config.TestConfig;
+import udehnih.report.exception.ReportNotFoundException;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -162,7 +163,7 @@ public class ReportControllerTest {
         request.setDetail("Updated Detail");
 
         when(reportService.updateReport(eq(reportId), any(Report.class)))
-                .thenThrow(new RuntimeException("Report not found"));
+                .thenThrow(new ReportNotFoundException("Report not found with id: " + reportId));
 
         mockMvc.perform(put("/api/reports/{reportId}", reportId)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -182,7 +183,7 @@ public class ReportControllerTest {
     @Test
     void deleteReport_WithNonExistentReport_ReturnsNotFound() throws Exception {
         Integer reportId = 999;
-        doThrow(new RuntimeException("Report not found"))
+        doThrow(new ReportNotFoundException("Report not found with id: " + reportId))
                 .when(reportService).deleteReport(reportId);
 
         mockMvc.perform(delete("/api/reports/{reportId}", reportId))

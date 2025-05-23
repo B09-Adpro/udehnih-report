@@ -5,6 +5,7 @@ import udehnih.report.service.ReportService;
 import udehnih.report.factory.ReportFactory;
 import udehnih.report.enums.ReportStatus;
 import udehnih.report.dto.RejectionRequestDto;
+import udehnih.report.exception.ReportNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.Test;
@@ -62,7 +63,7 @@ public class StaffReportControllerTest {
     @Test
     void testProcessReportNotFound() throws Exception {
         Mockito.when(reportService.processReport(99, null))
-               .thenThrow(new RuntimeException("Report not found"));
+               .thenThrow(new ReportNotFoundException("Report not found with id: 99"));
 
         mockMvc.perform(put("/api/staff/reports/99"))
                 .andExpect(status().isNotFound());
