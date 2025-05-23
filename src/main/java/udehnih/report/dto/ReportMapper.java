@@ -20,6 +20,10 @@ public class ReportMapper {
         dto.setTitle(report.getTitle());
         dto.setDetail(report.getDetail());
         dto.setStatus(report.getStatus());
+        dto.setRejectionMessage(report.getRejectionMessage());
+        if (report.getRejectionMessage() != null) {
+            dto.setRejectionMessageText(report.getRejectionMessage().getMessage());
+        }
         dto.setCreatedAt(report.getCreatedAt());
         dto.setUpdatedAt(report.getUpdatedAt());
         return dto;

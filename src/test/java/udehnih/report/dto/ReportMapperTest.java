@@ -3,8 +3,8 @@ package udehnih.report.dto;
 import org.junit.jupiter.api.Test;
 import udehnih.report.model.Report;
 import udehnih.report.enums.ReportStatus;
+import udehnih.report.enums.RejectionMessage;
 
-import java.beans.Transient;
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -16,50 +16,104 @@ class ReportMapperTest {
     }
 
     @Test
-    void toEntity_shouldMapFieldsCorrectly() {
+    void toEntity_WithValidDto_ReturnsReport() {
         ReportRequestDto dto = new ReportRequestDto();
-        dto.setStudentId("stu1");
-        dto.setTitle("title");
-        dto.setDetail("detail");
+        dto.setStudentId("12345");
+        dto.setTitle("Test Report");
+        dto.setDetail("Test Detail");
 
-        Report report = ReportMapper.toEntity(dto);
-        assertNotNull(report);
-        assertEquals("stu1", report.getStudentId());
-        assertEquals("title", report.getTitle());
-        assertEquals("detail", report.getDetail());
+        Report result = ReportMapper.toEntity(dto);
+
+        assertNotNull(result);
+        assertEquals("12345", result.getStudentId());
+        assertEquals("Test Report", result.getTitle());
+        assertEquals("Test Detail", result.getDetail());
     }
 
     @Test
-    void toEntity_nullInputReturnsNull() {
+    void toEntity_WithNullDto_ReturnsNull() {
         assertNull(ReportMapper.toEntity(null));
     }
 
     @Test
-    void toDto_shouldMapFieldsCorrectly() {
+    void toDto_WithValidReport_ReturnsDto() {
         LocalDateTime now = LocalDateTime.now();
         Report report = Report.builder()
-                .reportId(10)
-                .studentId("stu2")
-                .title("t2")
-                .detail("d2")
+                .reportId(1)
+                .studentId("12345")
+                .title("Test Report")
+                .detail("Test Detail")
                 .status(ReportStatus.OPEN)
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
-        ReportResponseDto dto = ReportMapper.toDto(report);
-        assertNotNull(dto);
-        assertEquals(10, dto.getReportId());
-        assertEquals("stu2", dto.getStudentId());
-        assertEquals("t2", dto.getTitle());
-        assertEquals("d2", dto.getDetail());
-        assertEquals(ReportStatus.OPEN, dto.getStatus());
-        assertEquals(now, dto.getCreatedAt());
-        assertEquals(now, dto.getUpdatedAt());
+
+        ReportResponseDto result = ReportMapper.toDto(report);
+
+        assertNotNull(result);
+        assertEquals(1, result.getReportId());
+        assertEquals("12345", result.getStudentId());
+        assertEquals("Test Report", result.getTitle());
+        assertEquals("Test Detail", result.getDetail());
+        assertEquals(ReportStatus.OPEN, result.getStatus());
+        assertNull(result.getRejectionMessage());
+        assertNull(result.getRejectionMessageText());
+        assertEquals(now, result.getCreatedAt());
+        assertEquals(now, result.getUpdatedAt());
     }
 
     @Test
-    void toDto_nullInputReturnsNull() {
+    void toDto_WithRejectedReport_ReturnsDtoWithRejectionMessage() {
+        LocalDateTime now = LocalDateTime.now();
+        Report report = Report.builder()
+                .reportId(1)
+                .studentId("12345")
+                .title("Test Report")
+                .detail("Test Detail")
+                .status(ReportStatus.REJECTED)
+                .rejectionMessage(RejectionMessage.INCOMPLETE_DETAIL)
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
+
+        ReportResponseDto result = ReportMapper.toDto(report);
+
+        assertNotNull(result);
+        assertEquals(1, result.getReportId());
+        assertEquals("12345", result.getStudentId());
+        assertEquals("Test Report", result.getTitle());
+        assertEquals("Test Detail", result.getDetail());
+        assertEquals(ReportStatus.REJECTED, result.getStatus());
+        assertEquals(RejectionMessage.INCOMPLETE_DETAIL, result.getRejectionMessage());
+        assertEquals("Detail laporan kurang lengkap", result.getRejectionMessageText());
+        assertEquals(now, result.getCreatedAt());
+        assertEquals(now, result.getUpdatedAt());
+    }
+
+    @Test
+    void toDto_WithNullReport_ReturnsNull() {
         assertNull(ReportMapper.toDto(null));
+    }
+
+    @Test
+    void toDto_WithNullRejectionMessage_ReturnsNullRejectionFields() {
+        LocalDateTime now = LocalDateTime.now();
+        Report report = Report.builder()
+                .reportId(1)
+                .studentId("12345")
+                .title("Test Report")
+                .detail("Test Detail")
+                .status(ReportStatus.OPEN)
+                .rejectionMessage(null)
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
+
+        ReportResponseDto result = ReportMapper.toDto(report);
+
+        assertNotNull(result);
+        assertNull(result.getRejectionMessage());
+        assertNull(result.getRejectionMessageText());
     }
 
     @Test

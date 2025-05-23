@@ -4,5 +4,6 @@ public enum ReportStatus {
     OPEN,
     CLOSED,
     IN_PROGRESS,
-    RESOLVED
+    RESOLVED,
+    REJECTED
 } 
