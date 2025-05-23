@@ -2,6 +2,7 @@ package udehnih.report.controller;
 
 import udehnih.report.model.Report;
 import udehnih.report.service.ReportService;
+import udehnih.report.service.AuthService;
 import udehnih.report.factory.ReportFactory;
 import udehnih.report.dto.ReportRequestDto;
 import udehnih.report.dto.ReportResponseDto;
@@ -10,8 +11,10 @@ import udehnih.report.enums.ReportStatus;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +24,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -35,107 +39,146 @@ public class ReportControllerTest {
     @MockBean
     private ReportService reportService;
 
-    @Test
-    void testGetUserReports() throws Exception {
-        Report report = ReportFactory.createOpenReport("12345", "Test", "Test Detail");
-        List<Report> reports = Collections.singletonList(report);
-        Mockito.when(reportService.getUserReports("12345")).thenReturn(reports);
+    @MockBean
+    private AuthService authService;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Test
+    void getUserReports_WithValidStudentRole_ReturnsReports() throws Exception {
+        // Arrange
+        String studentId = "12345";
+        List<Report> reports = Arrays.asList(
+            ReportFactory.createOpenReport(studentId, "Test Report 1", "Detail 1"),
+            ReportFactory.createOpenReport(studentId, "Test Report 2", "Detail 2")
+        );
+        when(reportService.getUserReports(studentId)).thenReturn(reports);
+
+        // Act & Assert
         mockMvc.perform(get("/api/reports")
-                .param("studentId", "12345")
-                .header("X-User-Email", "test@example.com")
+                .param("studentId", studentId)
+                .header("X-User-Email", "student@example.com")
                 .header("X-User-Role", "STUDENT"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].studentId").value("12345"));
+                .andExpect(jsonPath("$[0].studentId").value(studentId))
+                .andExpect(jsonPath("$[1].studentId").value(studentId))
+                .andExpect(jsonPath("$[0].title").value("Test Report 1"))
+                .andExpect(jsonPath("$[1].title").value("Test Report 2"));
     }
 
     @Test
-    void testCreateReport() throws Exception {
+    void getUserReports_WithNonStudentRole_ReturnsBadRequest() throws Exception {
+        // Act & Assert
+        mockMvc.perform(get("/api/reports")
+                .param("studentId", "12345")
+                .header("X-User-Email", "staff@example.com")
+                .header("X-User-Role", "STAFF"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getUserReports_WithMissingStudentId_ReturnsBadRequest() throws Exception {
+        // Act & Assert
+        mockMvc.perform(get("/api/reports")
+                .header("X-User-Email", "student@example.com")
+                .header("X-User-Role", "STUDENT"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getUserReports_WithEmptyStudentId_ReturnsBadRequest() throws Exception {
+        // Act & Assert
+        mockMvc.perform(get("/api/reports")
+                .param("studentId", "")
+                .header("X-User-Email", "student@example.com")
+                .header("X-User-Role", "STUDENT"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createReport_WithValidRequest_ReturnsCreated() throws Exception {
+        // Arrange
         ReportRequestDto request = new ReportRequestDto();
         request.setStudentId("12345");
-        request.setTitle("Test");
+        request.setTitle("Test Report");
         request.setDetail("Test Detail");
-        Report created = ReportFactory.createOpenReport("12345", "Test", "Test Detail");
-        Mockito.when(reportService.createReport(any(Report.class))).thenReturn(created);
 
-        String json = """
-                {
-                    "studentId": "12345",
-                    "title": "Test",
-                    "detail": "Test Detail"
-                }
-                """;
+        Report created = ReportFactory.createOpenReport("12345", "Test Report", "Test Detail");
+        when(reportService.createReport(any(Report.class))).thenReturn(created);
 
+        // Act & Assert
         mockMvc.perform(post("/api/reports")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(json))
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.studentId").value("12345"))
-                .andExpect(jsonPath("$.title").value("Test"))
+                .andExpect(jsonPath("$.title").value("Test Report"))
                 .andExpect(jsonPath("$.detail").value("Test Detail"))
                 .andExpect(jsonPath("$.status").value(ReportStatus.OPEN.name()));
     }
 
     @Test
-    void testUpdateReport() throws Exception {
+    void updateReport_WithValidRequest_ReturnsOk() throws Exception {
+        // Arrange
+        Integer reportId = 1;
         ReportRequestDto request = new ReportRequestDto();
         request.setStudentId("12345");
-        request.setTitle("Updated Title");
+        request.setTitle("Updated Report");
         request.setDetail("Updated Detail");
-        Report updated = ReportFactory.createOpenReport("12345", "Updated Title", "Updated Detail");
-        Mockito.when(reportService.updateReport(eq(1), any(Report.class))).thenReturn(updated);
 
-        String json = """
-                {
-                    "studentId": "12345",
-                    "title": "Updated Title",
-                    "detail": "Updated Detail"
-                }
-                """;
+        Report updated = ReportFactory.createOpenReport("12345", "Updated Report", "Updated Detail");
+        when(reportService.updateReport(eq(reportId), any(Report.class))).thenReturn(updated);
 
-        mockMvc.perform(put("/api/reports/1")
+        // Act & Assert
+        mockMvc.perform(put("/api/reports/{reportId}", reportId)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(json))
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.studentId").value("12345"))
-                .andExpect(jsonPath("$.title").value("Updated Title"))
-                .andExpect(jsonPath("$.detail").value("Updated Detail"))
-                .andExpect(jsonPath("$.status").value(ReportStatus.OPEN.name()));
+                .andExpect(jsonPath("$.title").value("Updated Report"))
+                .andExpect(jsonPath("$.detail").value("Updated Detail"));
     }
 
     @Test
-    void testUpdateReportNotFound() throws Exception {
-        Mockito.when(reportService.updateReport(eq(99), any(Report.class)))
-               .thenThrow(new RuntimeException("Report not found"));
+    void updateReport_WithNonExistentReport_ReturnsNotFound() throws Exception {
+        // Arrange
+        Integer reportId = 999;
+        ReportRequestDto request = new ReportRequestDto();
+        request.setStudentId("12345");
+        request.setTitle("Updated Report");
+        request.setDetail("Updated Detail");
 
-        String json = """
-                {
-                    "studentId": "12345",
-                    "title": "Updated Title",
-                    "detail": "Updated Detail"
-                }
-                """;
+        when(reportService.updateReport(eq(reportId), any(Report.class)))
+                .thenThrow(new RuntimeException("Report not found"));
 
-        mockMvc.perform(put("/api/reports/99")
+        // Act & Assert
+        mockMvc.perform(put("/api/reports/{reportId}", reportId)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(json))
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void testDeleteReport() throws Exception {
-        doNothing().when(reportService).deleteReport(1);
+    void deleteReport_WithValidId_ReturnsNoContent() throws Exception {
+        // Arrange
+        Integer reportId = 1;
+        doNothing().when(reportService).deleteReport(reportId);
 
-        mockMvc.perform(delete("/api/reports/1"))
+        // Act & Assert
+        mockMvc.perform(delete("/api/reports/{reportId}", reportId))
                 .andExpect(status().isNoContent());
     }
 
     @Test
-    void testDeleteReportNotFound() throws Exception {
-        Mockito.doThrow(new RuntimeException("Report not found"))
-               .when(reportService).deleteReport(99);
+    void deleteReport_WithNonExistentReport_ReturnsNotFound() throws Exception {
+        // Arrange
+        Integer reportId = 999;
+        doThrow(new RuntimeException("Report not found"))
+                .when(reportService).deleteReport(reportId);
 
-        mockMvc.perform(delete("/api/reports/99"))
+        // Act & Assert
+        mockMvc.perform(delete("/api/reports/{reportId}", reportId))
                 .andExpect(status().isNotFound());
     }
 }
