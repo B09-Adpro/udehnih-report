@@ -4,6 +4,8 @@ import udehnih.report.model.Report;
 import udehnih.report.repository.ReportRepository;
 import udehnih.report.factory.ReportFactory;
 import udehnih.report.enums.ReportStatus;
+import udehnih.report.dto.RejectionRequestDto;
+import udehnih.report.enums.RejectionMessage;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -62,10 +64,26 @@ public class ReportServiceTest {
         when(reportRepository.findById(1)).thenReturn(Optional.of(existing));
         when(reportRepository.save(any())).thenReturn(existing);
 
-        Report result = reportService.processReport(1);
+        Report result = reportService.processReport(1, null); // Passing null for approval
 
         assertEquals(ReportStatus.RESOLVED, result.getStatus());
         verify(reportRepository).save(existing);
+    }
+
+    @Test
+    void testProcessReportWithRejection() {
+        Report existing = ReportFactory.createOpenReport("12345", "Judul", "Detail");
+        when(reportRepository.findById(1)).thenReturn(Optional.of(existing));
+        when(reportRepository.save(any())).thenReturn(existing);
+
+        RejectionRequestDto rejectionRequest = new RejectionRequestDto();
+        rejectionRequest.setRejectionMessage(RejectionMessage.INCOMPLETE_DETAIL);
+
+        Report result = reportService.processReport(1, rejectionRequest);
+
+        assertEquals(ReportStatus.REJECTED, result.getStatus());
+        assertEquals(RejectionMessage.INCOMPLETE_DETAIL, result.getRejectionMessage());
+        verify(reportRepository, times(2)).save(existing);
     }
 
     @Test
@@ -73,7 +91,7 @@ public class ReportServiceTest {
         when(reportRepository.findById(99)).thenReturn(Optional.empty());
 
         Exception exception = assertThrows(RuntimeException.class, () -> {
-            reportService.processReport(99);
+            reportService.processReport(99, null);
         });
 
         assertEquals("Report not found", exception.getMessage());
