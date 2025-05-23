@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.*;
 import udehnih.report.enums.ReportStatus;
+import udehnih.report.enums.RejectionMessage;
 
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
@@ -34,6 +35,10 @@ public class Report {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ReportStatus status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "rejection_message")
+    private RejectionMessage rejectionMessage;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
