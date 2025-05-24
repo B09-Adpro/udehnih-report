@@ -7,6 +7,8 @@ import udehnih.report.dto.ReportResponseDto;
 import udehnih.report.dto.ReportMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,11 +30,12 @@ public class ReportController {
 
     @GetMapping
     public CompletableFuture<ResponseEntity<List<ReportResponseDto>>> getUserReports(
-        @RequestParam(required = false) String studentId,
-        @RequestHeader("X-User-Email") String userEmail,
-        @RequestHeader("X-User-Role") String userRole) {
+        @RequestParam(required = false) String studentId) {
+        
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String role = auth.getAuthorities().iterator().next().getAuthority();
 
-        if (!userRole.equals("STUDENT")) {
+        if (!role.replace("ROLE_", "").equals("STUDENT")) {
             return CompletableFuture.completedFuture(ResponseEntity.badRequest().build());
         }
         
