@@ -43,9 +43,18 @@ public class JwtUtil {
     }
 
     public String extractRole(String token) {
-        final Claims claims = extractAllClaims(token);
-        String role = claims.get("role", String.class);
-        return role != null ? (role.startsWith("ROLE_") ? role : "ROLE_" + role) : null;
+        try {
+            final Claims claims = extractAllClaims(token);
+            String role = claims.get("role", String.class);
+            if (role == null) {
+                System.out.println("Role claim is missing in the token");
+                return "ROLE_STUDENT"; // Default role as fallback
+            }
+            return role.startsWith("ROLE_") ? role : "ROLE_" + role;
+        } catch (Exception e) {
+            System.out.println("Error extracting role from token: " + e.getMessage());
+            return "ROLE_STUDENT"; // Default role as fallback
+        }
     }
 
     public Date extractExpiration(String token) {
@@ -53,8 +62,13 @@ public class JwtUtil {
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims);
+        try {
+            final Claims claims = extractAllClaims(token);
+            return claimsResolver.apply(claims);
+        } catch (Exception e) {
+            System.out.println("Error extracting claim from token: " + e.getMessage());
+            return null;
+        }
     }
 
     private Claims extractAllClaims(String token) {
