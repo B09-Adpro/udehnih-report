@@ -164,4 +164,41 @@ public class ReportController {
             return ResponseEntity.notFound().build();
         }
     }
+    
+    @GetMapping("/{reportId}")
+    public CompletableFuture<ResponseEntity<ReportResponseDto>> getReportById(
+            @PathVariable("reportId") Integer reportId,
+            HttpServletRequest request) {
+        
+        // Get the JWT token directly from the request
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return CompletableFuture.completedFuture(ResponseEntity.status(401).build());
+        }
+        
+        String token = authHeader.substring(7);
+        String username = jwtUtil.extractUsername(token);
+        
+        log.info("Retrieving report with ID: {} for user: {}", reportId, username);
+        
+        return reportService.getReportById(reportId)
+            .thenApply(report -> {
+                // Check if the user has permission to access this report
+                String userIdFromToken = userDetailsService.getUserIdByEmail(username).orElse(null);
+                String role = jwtUtil.extractRole(token);
+                
+                // If user is not an admin and not the owner of the report, return 403
+                if (!"ADMIN".equals(role) && !report.getStudentId().equals(userIdFromToken)) {
+                    log.warn("User {} attempted to access report {} which belongs to {}", 
+                             username, reportId, report.getStudentId());
+                    return ResponseEntity.status(403).<ReportResponseDto>build();
+                }
+                
+                return ResponseEntity.ok(ReportMapper.toDto(report));
+            })
+            .exceptionally(ex -> {
+                log.error("Error retrieving report: {}", ex.getMessage());
+                return ResponseEntity.status(404).build();
+            });
+    }
 }
