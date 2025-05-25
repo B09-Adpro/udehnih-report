@@ -16,10 +16,12 @@ import udehnih.report.filter.JwtAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import udehnih.report.filter.CorsFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.annotation.PostConstruct;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
@@ -32,6 +34,9 @@ public class SecurityConfig {
 
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
+    
+    @Autowired
+    private CorsFilter corsFilter;
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
@@ -63,7 +68,8 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
             .securityMatcher("/**")
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterAfter(jwtAuthenticationFilter, CorsFilter.class)
             .exceptionHandling(handling -> handling
                 .authenticationEntryPoint((request, response, authException) -> {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -84,11 +90,32 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("*"));
+        // Allow all origins - we'll handle the specific origin in the filter
+        configuration.setAllowedOriginPatterns(Collections.singletonList("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setExposedHeaders(Arrays.asList("Authorization", "x-auth-token"));
-        configuration.setAllowCredentials(false);
+        configuration.setAllowedHeaders(Arrays.asList(
+            "Authorization", 
+            "Content-Type", 
+            "Accept", 
+            "X-Requested-With", 
+            "Cache-Control", 
+            "Access-Control-Allow-Origin",
+            "Access-Control-Allow-Headers"
+        ));
+        configuration.setExposedHeaders(Arrays.asList(
+            "Authorization", 
+            "x-auth-token", 
+            "X-Auth-Token", 
+            "X-Auth-Status", 
+            "X-Auth-Username", 
+            "X-Auth-Role", 
+            "X-Auth-Name",
+            "X-User-Email",
+            "X-User-Role",
+            "Access-Control-Allow-Origin",
+            "Access-Control-Allow-Credentials"
+        ));
+        configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
