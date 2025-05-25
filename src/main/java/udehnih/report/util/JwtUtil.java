@@ -51,6 +51,7 @@ public class JwtUtil {
             String role = claims.get("role", String.class);
             if (role == null) {
                 log.warn("Role claim is missing in the token");
+                // Using AppConstants to ensure consistent role format
                 return AppConstants.ROLE_PREFIX + AppConstants.STUDENT_ROLE; // Default role as fallback
             }
             return role.startsWith(AppConstants.ROLE_PREFIX) ? role : AppConstants.ROLE_PREFIX + role;
