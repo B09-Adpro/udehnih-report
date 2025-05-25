@@ -19,7 +19,7 @@ class AsyncConfigTest {
     private AsyncConfig asyncConfig;
 
     @Test
-    void taskExecutor_ShouldHaveCorrectConfiguration() {
+    void taskExecutorShouldHaveCorrectConfiguration() {
         // Get the executor from the config
         Executor executor = asyncConfig.taskExecutor();
         
