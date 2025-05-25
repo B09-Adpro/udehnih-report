@@ -57,20 +57,24 @@ public class TestConfig implements WebMvcConfigurer {
     
     @Bean
     public JwtConfig jwtConfig() {
-        JwtConfig config = new JwtConfig();
-        // Use reflection to set values since we can't use @Value in tests
-        try {
-            java.lang.reflect.Field secretKeyField = JwtConfig.class.getDeclaredField("secretKey");
-            secretKeyField.setAccessible(true);
-            secretKeyField.set(config, "testSecretKeyWithAtLeast32Characters12345");
-            
-            java.lang.reflect.Field expirationField = JwtConfig.class.getDeclaredField("expiration");
-            expirationField.setAccessible(true);
-            expirationField.set(config, 3600000L); // 1 hour
-        } catch (Exception e) {
-            e.printStackTrace();
+        // Instead of using reflection, create a test-specific implementation
+        return new TestJwtConfig();
+    }
+    
+    /**
+     * Test-specific implementation of JwtConfig that provides fixed values for testing
+     * This avoids using reflection to set private fields
+     */
+    private static class TestJwtConfig extends JwtConfig {
+        @Override
+        public String getSecretKey() {
+            return "testSecretKeyWithAtLeast32Characters12345";
         }
-        return config;
+        
+        @Override
+        public Long getExpiration() {
+            return 3600000L; // 1 hour
+        }
     }
     
     @Bean

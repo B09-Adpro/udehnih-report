@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
+import udehnih.report.util.AppConstants;
 
 @Service
 @Slf4j
@@ -68,7 +69,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 "WHERE ur.user_id = ?";
             
             // Default role if none is found
-            String userRole = "STUDENT"; // Default role
+            String userRole = AppConstants.STUDENT_ROLE; // Default role
             
             try {
                 // Try to get the role from the database
@@ -87,7 +88,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             }
             
             // Format the role name for Spring Security (add ROLE_ prefix)
-            String roleName = "ROLE_" + userRole.toUpperCase();
+            String roleName = AppConstants.ROLE_PREFIX + userRole.toUpperCase();
             
             // Build and return the user details
             return User.builder()
@@ -140,7 +141,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 if (role != null) {
                     userInfo.put("role", role);
                 } else {
-                    userInfo.put("role", "STUDENT"); // Default role
+                    userInfo.put("role", AppConstants.STUDENT_ROLE); // Default role
                 }
             } catch (Exception roleEx) {
                 // If we can't get the role, use default

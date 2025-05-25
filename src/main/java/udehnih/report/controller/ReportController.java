@@ -21,12 +21,15 @@ import udehnih.report.dto.ReportResponseDto;
 import udehnih.report.model.Report;
 import udehnih.report.service.CustomUserDetailsService;
 import udehnih.report.service.ReportService;
+import udehnih.report.util.AppConstants;
 import udehnih.report.util.JwtUtil;
 
 @Slf4j
 @RestController
 @RequestMapping("/api/reports")
 public class ReportController {
+    
+    // Using constants from AppConstants class
 
     private final ReportService reportService;
     private final JwtUtil jwtUtil;
@@ -48,12 +51,12 @@ public class ReportController {
         final HttpServletRequest httpRequest
     ) {
         // Get the JWT token directly from the request
-        final String authHeader = httpRequest.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        final String authHeader = httpRequest.getHeader(AppConstants.AUTHORIZATION_HEADER);
+        if (authHeader == null || !authHeader.startsWith(AppConstants.BEARER_PREFIX)) {
             return ResponseEntity.status(401).build();
         }
 
-        final String token = authHeader.substring(7);
+        final String token = authHeader.substring(AppConstants.BEARER_PREFIX.length());
         final String username = jwtUtil.extractUsername(token);
 
         log.info("Creating report for user: {}", username);
@@ -95,12 +98,12 @@ public class ReportController {
         final HttpServletRequest request
     ) {
         // Get the JWT token directly from the request
-        final String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        final String authHeader = request.getHeader(AppConstants.AUTHORIZATION_HEADER);
+        if (authHeader == null || !authHeader.startsWith(AppConstants.BEARER_PREFIX)) {
             return CompletableFuture.completedFuture(ResponseEntity.status(401).body(List.of()));
         }
         
-        final String token = authHeader.substring(7);
+        final String token = authHeader.substring(AppConstants.BEARER_PREFIX.length());
         final String username = jwtUtil.extractUsername(token);
         final String role = jwtUtil.extractRole(token);
 
@@ -109,7 +112,7 @@ public class ReportController {
         log.info("Role from token: {}", role);
 
         // Check if the user has STUDENT role - only students can access reports
-        if (!"STUDENT".equals(role)) {
+        if (!AppConstants.STUDENT_ROLE.equals(role)) {
             log.warn("User {} with role {} attempted to access student reports", username, role);
             return CompletableFuture.completedFuture(ResponseEntity.status(400).body(List.of()));
         }
@@ -214,7 +217,7 @@ public class ReportController {
             );
         }
 
-        final String token = authHeader.substring(7);
+        final String token = authHeader.substring(AppConstants.BEARER_PREFIX.length());
         final String username = jwtUtil.extractUsername(token);
 
         log.info(

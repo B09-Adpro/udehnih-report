@@ -3,10 +3,12 @@ package udehnih.report.util;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import udehnih.report.config.JwtConfig;
+import udehnih.report.util.AppConstants;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
@@ -16,6 +18,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 @Component
+@Slf4j
 public class JwtUtil {
 
     @Autowired
@@ -27,7 +30,7 @@ public class JwtUtil {
 
     public String generateToken(String email, String role) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("role", role.startsWith("ROLE_") ? role : "ROLE_" + role);
+        claims.put("role", role.startsWith(AppConstants.ROLE_PREFIX) ? role : AppConstants.ROLE_PREFIX + role);
         
         return Jwts.builder()
                 .setClaims(claims)
@@ -47,13 +50,14 @@ public class JwtUtil {
             final Claims claims = extractAllClaims(token);
             String role = claims.get("role", String.class);
             if (role == null) {
-                System.out.println("Role claim is missing in the token");
-                return "ROLE_STUDENT"; // Default role as fallback
+                log.warn("Role claim is missing in the token");
+                // Using AppConstants to ensure consistent role format
+                return AppConstants.ROLE_PREFIX + AppConstants.STUDENT_ROLE; // Default role as fallback
             }
-            return role.startsWith("ROLE_") ? role : "ROLE_" + role;
+            return role.startsWith(AppConstants.ROLE_PREFIX) ? role : AppConstants.ROLE_PREFIX + role;
         } catch (Exception e) {
-            System.out.println("Error extracting role from token: " + e.getMessage());
-            return "ROLE_STUDENT"; // Default role as fallback
+            log.error("Error extracting role from token: {}", e.getMessage());
+            return AppConstants.ROLE_PREFIX + AppConstants.STUDENT_ROLE; // Default role as fallback
         }
     }
 
@@ -66,7 +70,7 @@ public class JwtUtil {
             final Claims claims = extractAllClaims(token);
             return claimsResolver.apply(claims);
         } catch (Exception e) {
-            System.out.println("Error extracting claim from token: " + e.getMessage());
+            log.error("Error extracting claim from token: {}", e.getMessage());
             return null;
         }
     }
