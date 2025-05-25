@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 public class ReportResponseDto {
     private Integer reportId;
     private String studentId;
+    private String studentName;
     private String title;
     private String detail;
     private ReportStatus status;
