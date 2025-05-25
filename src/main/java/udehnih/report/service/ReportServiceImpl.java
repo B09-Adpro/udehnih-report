@@ -56,6 +56,15 @@ public class ReportServiceImpl implements ReportService {
     public CompletableFuture<List<Report>> getAllReports() {
         return reportRepository.findAllAsync();
     }
+    
+    @Override
+    @Async("reportTaskExecutor")
+    public CompletableFuture<Report> getReportById(Integer reportId) {
+        return CompletableFuture.supplyAsync(() -> 
+            reportRepository.findById(reportId)
+                .orElseThrow(() -> new ReportNotFoundException("Report not found with id: " + reportId))
+        );
+    }
 
     @Override
     @Transactional

@@ -12,4 +12,5 @@ public interface ReportService {
     void deleteReport(Integer reportId);
     CompletableFuture<List<Report>> getAllReports();
     Report processReport(Integer reportId, RejectionRequestDto rejectionRequest);
+    CompletableFuture<Report> getReportById(Integer reportId);
 }
