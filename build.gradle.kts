@@ -12,6 +12,7 @@ val seleniumJavaVersion = "4.14.1"
 val seleniumJupiterVersion = "5.0.1"
 val webdrivermanagerVersion = "5.6.3"
 val junitJupiterVersion = "5.9.1"
+val jjwtVersion = "0.11.5"
 
 java {
     toolchain {
@@ -21,7 +22,7 @@ java {
 }
 
 springBoot {
-    mainClass = "udehnih.ReportApplication"
+    mainClass = "udehnih.report.ReportApplication"
 }
 
 configurations {
@@ -37,11 +38,18 @@ repositories {
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    
+    implementation("io.jsonwebtoken:jjwt-api:$jjwtVersion")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:$jjwtVersion")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:$jjwtVersion")
+    
     compileOnly("org.projectlombok:lombok")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
     annotationProcessor("org.projectlombok:lombok")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.security:spring-security-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.postgresql:postgresql")
@@ -54,6 +62,11 @@ dependencies {
 
     implementation("jakarta.persistence:jakarta.persistence-api:3.1.0")
     runtimeOnly("com.h2database:h2")
+    implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
+
+    testImplementation("com.h2database:h2")
+    testImplementation("org.hibernate.orm:hibernate-core:6.4.4.Final")
+    testImplementation("org.hibernate.orm:hibernate-community-dialects:6.4.4.Final")
 }
 
 tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {

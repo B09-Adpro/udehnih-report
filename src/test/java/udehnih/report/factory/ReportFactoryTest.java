@@ -3,6 +3,7 @@ package udehnih.report.factory;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import udehnih.report.model.Report;
+import udehnih.report.enums.ReportStatus;
 import java.time.LocalDateTime;
 
 class ReportFactoryTest {
@@ -18,7 +19,7 @@ class ReportFactoryTest {
         assertEquals(STUDENT_ID, report.getStudentId());
         assertEquals(TITLE, report.getTitle());
         assertEquals(DETAIL, report.getDetail());
-        assertEquals("OPEN", report.getStatus());
+        assertEquals(ReportStatus.OPEN, report.getStatus());
         assertNotNull(report.getCreatedAt());
         assertTrue(report.isOpen());
     }
@@ -31,7 +32,7 @@ class ReportFactoryTest {
         assertEquals(STUDENT_ID, report.getStudentId());
         assertEquals(TITLE, report.getTitle());
         assertEquals(DETAIL, report.getDetail());
-        assertEquals("CLOSED", report.getStatus());
+        assertEquals(ReportStatus.CLOSED, report.getStatus());
         assertNotNull(report.getCreatedAt());
         assertFalse(report.isOpen());
     }
@@ -44,7 +45,7 @@ class ReportFactoryTest {
         assertEquals(STUDENT_ID, report.getStudentId());
         assertEquals(TITLE, report.getTitle());
         assertEquals(DETAIL, report.getDetail());
-        assertEquals("IN_PROGRESS", report.getStatus());
+        assertEquals(ReportStatus.IN_PROGRESS, report.getStatus());
         assertNotNull(report.getCreatedAt());
         assertFalse(report.isOpen());
     }
@@ -56,7 +57,7 @@ class ReportFactoryTest {
         assertNull(report.getStudentId());
         assertNull(report.getTitle());
         assertNull(report.getDetail());
-        assertEquals("OPEN", report.getStatus());
+        assertEquals(ReportStatus.OPEN, report.getStatus());
         assertNotNull(report.getCreatedAt());
     }
 
@@ -67,7 +68,7 @@ class ReportFactoryTest {
         assertEquals("", report.getStudentId());
         assertEquals("", report.getTitle());
         assertEquals("", report.getDetail());
-        assertEquals("CLOSED", report.getStatus());
+        assertEquals(ReportStatus.CLOSED, report.getStatus());
         assertNotNull(report.getCreatedAt());
     }
 
@@ -78,7 +79,7 @@ class ReportFactoryTest {
         assertNull(report.getStudentId());
         assertEquals("", report.getTitle());
         assertNull(report.getDetail());
-        assertEquals("IN_PROGRESS", report.getStatus());
+        assertEquals(ReportStatus.IN_PROGRESS, report.getStatus());
         assertNotNull(report.getCreatedAt());
     }
 
@@ -91,8 +92,5 @@ class ReportFactoryTest {
         assertTrue(report.getCreatedAt().isBefore(after));
     }
 
-    @Test
-    void coverDefaultConstructor() {
-        new ReportFactory();
-    }
+    // No need to test the private constructor of a utility class
 } 

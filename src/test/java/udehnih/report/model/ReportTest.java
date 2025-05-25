@@ -2,6 +2,8 @@ package udehnih.report.model;
 
 import org.junit.jupiter.api.Test;
 import udehnih.report.factory.ReportFactory;
+import udehnih.report.enums.ReportStatus;
+import udehnih.report.enums.RejectionMessage;
 import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -12,7 +14,8 @@ public class ReportTest {
         String studentId = "12345";
         String title = "Test Report";
         String detail = "This is a test report";
-        String status = "Pending";
+        ReportStatus status = ReportStatus.OPEN;
+        RejectionMessage rejectionMessage = RejectionMessage.INCOMPLETE_DETAIL;
         LocalDateTime createdAt = LocalDateTime.now();
         LocalDateTime updatedAt = LocalDateTime.now();
 
@@ -22,6 +25,7 @@ public class ReportTest {
                 .title(title)
                 .detail(detail)
                 .status(status)
+                .rejectionMessage(rejectionMessage)
                 .createdAt(createdAt)
                 .updatedAt(updatedAt)
                 .build();
@@ -31,6 +35,7 @@ public class ReportTest {
         assertEquals(title, report.getTitle());
         assertEquals(detail, report.getDetail());
         assertEquals(status, report.getStatus());
+        assertEquals(rejectionMessage, report.getRejectionMessage());
         assertEquals(createdAt, report.getCreatedAt());
         assertEquals(updatedAt, report.getUpdatedAt());
     }
@@ -43,6 +48,7 @@ public class ReportTest {
         assertNull(report.getTitle());
         assertNull(report.getDetail());
         assertNull(report.getStatus());
+        assertNull(report.getRejectionMessage());
         assertNull(report.getCreatedAt());
         assertNull(report.getUpdatedAt());
     }
@@ -53,17 +59,19 @@ public class ReportTest {
         String studentId = "12345";
         String title = "Test Report";
         String detail = "This is a test report";
-        String status = "Pending";
+        ReportStatus status = ReportStatus.OPEN;
+        RejectionMessage rejectionMessage = RejectionMessage.INCOMPLETE_DETAIL;
         LocalDateTime createdAt = LocalDateTime.now();
         LocalDateTime updatedAt = LocalDateTime.now();
 
-        Report report = new Report(reportId, studentId, title, detail, status, createdAt, updatedAt);
+        Report report = new Report(reportId, studentId, title, detail, status, rejectionMessage, createdAt, updatedAt);
 
         assertEquals(reportId, report.getReportId());
         assertEquals(studentId, report.getStudentId());
         assertEquals(title, report.getTitle());
         assertEquals(detail, report.getDetail());
         assertEquals(status, report.getStatus());
+        assertEquals(rejectionMessage, report.getRejectionMessage());
         assertEquals(createdAt, report.getCreatedAt());
         assertEquals(updatedAt, report.getUpdatedAt());
     }
@@ -75,7 +83,8 @@ public class ReportTest {
         String studentId = "12345";
         String title = "Test Report";
         String detail = "This is a test report";
-        String status = "Pending";
+        ReportStatus status = ReportStatus.OPEN;
+        RejectionMessage rejectionMessage = RejectionMessage.INCOMPLETE_DETAIL;
         LocalDateTime createdAt = LocalDateTime.now();
         LocalDateTime updatedAt = LocalDateTime.now();
 
@@ -84,6 +93,7 @@ public class ReportTest {
         report.setTitle(title);
         report.setDetail(detail);
         report.setStatus(status);
+        report.setRejectionMessage(rejectionMessage);
         report.setCreatedAt(createdAt);
         report.setUpdatedAt(updatedAt);
 
@@ -92,6 +102,7 @@ public class ReportTest {
         assertEquals(title, report.getTitle());
         assertEquals(detail, report.getDetail());
         assertEquals(status, report.getStatus());
+        assertEquals(rejectionMessage, report.getRejectionMessage());
         assertEquals(createdAt, report.getCreatedAt());
         assertEquals(updatedAt, report.getUpdatedAt());
     }
@@ -123,7 +134,7 @@ public class ReportTest {
         assertTrue(toString.contains("12345"));
         assertTrue(toString.contains("Test Report"));
         assertTrue(toString.contains("This is a test report"));
-        assertTrue(toString.contains("OPEN"));
+        assertTrue(toString.contains(ReportStatus.OPEN.name()));
     }
 
     @Test

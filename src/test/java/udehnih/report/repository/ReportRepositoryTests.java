@@ -1,16 +1,16 @@
 package udehnih.report.repository;
 
 import udehnih.report.model.Report;
-import udehnih.report.repository.ReportRepository;
 import udehnih.report.factory.ReportFactory;
+import udehnih.report.enums.ReportStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -47,7 +47,7 @@ public class ReportRepositoryTests {
     }
 
     @Test
-    void whenFindByStudentId_thenReturnReports() {
+    void whenFindByStudentId_thenReturnReports() throws ExecutionException, InterruptedException {
         Report report1 = ReportFactory.createOpenReport("12345", "Test Report 1", "Test Detail 1");
         Report report2 = ReportFactory.createOpenReport("12345", "Test Report 2", "Test Detail 2");
 
@@ -55,7 +55,7 @@ public class ReportRepositoryTests {
         entityManager.persist(report2);
         entityManager.flush();
 
-        List<Report> found = reportRepository.findByStudentId("12345");
+        List<Report> found = reportRepository.findByStudentId("12345").get();
 
         assertThat(found).hasSize(2);
         assertThat(found).allMatch(report -> report.getStudentId().equals("12345"));
@@ -98,5 +98,19 @@ public class ReportRepositoryTests {
 
         assertThat(exists).isTrue();
         assertThat(notExists).isFalse();
+    }
+
+    @Test
+    void whenFindAllAsync_thenReturnAllReports() throws ExecutionException, InterruptedException {
+        Report report1 = ReportFactory.createOpenReport("12345", "Test Report 1", "Test Detail 1");
+        Report report2 = ReportFactory.createOpenReport("67890", "Test Report 2", "Test Detail 2");
+
+        entityManager.persist(report1);
+        entityManager.persist(report2);
+        entityManager.flush();
+
+        List<Report> found = reportRepository.findAllAsync().get();
+
+        assertThat(found).hasSize(2);
     }
 }

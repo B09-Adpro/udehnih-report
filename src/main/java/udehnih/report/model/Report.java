@@ -3,9 +3,14 @@ package udehnih.report.model;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.*;
+import udehnih.report.enums.ReportStatus;
+import udehnih.report.enums.RejectionMessage;
 
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
+
+import static jakarta.persistence.GenerationType.IDENTITY;
+import static jakarta.persistence.EnumType.STRING;
 
 @Entity
 @Table(name = "report")
@@ -17,7 +22,7 @@ import java.time.LocalDateTime;
 @ToString
 public class Report {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = IDENTITY)
     @EqualsAndHashCode.Include
     private Integer reportId;
 
@@ -27,11 +32,16 @@ public class Report {
     @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String detail;
 
-    @Column(nullable = false)
-    private String status;
+    @Enumerated(STRING)
+    @Column(nullable = false, columnDefinition = "varchar(255) check (status in ('OPEN', 'CLOSED', 'IN_PROGRESS', 'RESOLVED', 'REJECTED'))")
+    private ReportStatus status;
+
+    @Enumerated(STRING)
+    @Column(name = "rejection_message")
+    private RejectionMessage rejectionMessage;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -41,6 +51,6 @@ public class Report {
     private LocalDateTime updatedAt;
 
     public boolean isOpen() {
-        return "OPEN".equals(this.status);
+        return ReportStatus.OPEN.equals(this.status);
     }
 }
