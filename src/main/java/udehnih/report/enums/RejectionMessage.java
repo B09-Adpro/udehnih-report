@@ -7,7 +7,7 @@ public enum RejectionMessage {
 
     private final String message;
 
-    RejectionMessage(String message) {
+    RejectionMessage(final String message) {
         this.message = message;
     }
 

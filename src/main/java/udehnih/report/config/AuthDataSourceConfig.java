@@ -10,6 +10,13 @@ import javax.sql.DataSource;
 
 @Configuration
 public class AuthDataSourceConfig {
+    
+    /**
+     * Default constructor for Spring configuration class.
+     */
+    public AuthDataSourceConfig() {
+        // Default constructor required by Spring
+    }
 
     @Bean
     @ConfigurationProperties("auth.datasource")
@@ -19,12 +26,12 @@ public class AuthDataSourceConfig {
 
     @Bean(name = "authDataSource")
     public DataSource authDataSource() {
-        DataSourceProperties properties = authDataSourceProperties();
+        final DataSourceProperties properties = authDataSourceProperties();
         return properties.initializeDataSourceBuilder().build();
     }
 
     @Bean(name = "authJdbcTemplate")
-    public JdbcTemplate authJdbcTemplate(@Qualifier("authDataSource") DataSource dataSource) {
+    public JdbcTemplate authJdbcTemplate(@Qualifier("authDataSource") final DataSource dataSource) {
         return new JdbcTemplate(dataSource);
     }
 }
