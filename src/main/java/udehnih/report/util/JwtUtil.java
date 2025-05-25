@@ -27,9 +27,42 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(jwtConfig.getSecretKey().getBytes(StandardCharsets.UTF_8));
     }
 
+    /**
+     * Generate a JWT token with the given email and role(s)
+     * @param email The user's email
+     * @param role The user's role(s) - can be a single role or a comma-separated list of roles
+     * @return The generated JWT token
+     */
     public String generateToken(String email, String role) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("role", role.startsWith(AppConstants.ROLE_PREFIX) ? role : AppConstants.ROLE_PREFIX + role);
+        
+        // Check if the role contains multiple roles (comma-separated)
+        if (role.contains(",")) {
+            // Process multiple roles
+            String[] roles = role.split(",");
+            StringBuilder formattedRoles = new StringBuilder();
+            
+            for (String singleRole : roles) {
+                String formattedRole = singleRole.trim();
+                if (!formattedRole.startsWith(AppConstants.ROLE_PREFIX)) {
+                    formattedRole = AppConstants.ROLE_PREFIX + formattedRole;
+                }
+                
+                if (formattedRoles.length() > 0) {
+                    formattedRoles.append(",");
+                }
+                formattedRoles.append(formattedRole);
+            }
+            
+            claims.put("role", formattedRoles.toString());
+            // Also store the roles as an array for easier processing
+            claims.put("roles", formattedRoles.toString().split(","));
+        } else {
+            // Single role case
+            String formattedRole = role.startsWith(AppConstants.ROLE_PREFIX) ? role : AppConstants.ROLE_PREFIX + role;
+            claims.put("role", formattedRole);
+            claims.put("roles", new String[]{formattedRole});
+        }
         
         return Jwts.builder()
                 .setClaims(claims)
@@ -44,9 +77,37 @@ public class JwtUtil {
         return extractClaim(token, Claims::getSubject);
     }
 
+    /**
+     * Extract the role(s) from a JWT token
+     * @param token The JWT token
+     * @return The role(s) as a string (comma-separated if multiple)
+     */
     public String extractRole(String token) {
         try {
             final Claims claims = extractAllClaims(token);
+            
+            // First try to get the roles array
+            try {
+                Object rolesObj = claims.get("roles");
+                if (rolesObj instanceof String[]) {
+                    String[] roles = (String[]) rolesObj;
+                    if (roles.length > 0) {
+                        // Join roles with comma
+                        StringBuilder roleStr = new StringBuilder();
+                        for (String role : roles) {
+                            if (roleStr.length() > 0) {
+                                roleStr.append(",");
+                            }
+                            roleStr.append(role);
+                        }
+                        return roleStr.toString();
+                    }
+                }
+            } catch (Exception e) {
+                log.debug("Could not extract roles array, falling back to role string: {}", e.getMessage());
+            }
+            
+            // Fallback to the role string
             String role = claims.get("role", String.class);
             if (role == null) {
                 log.warn("Role claim is missing in the token");

@@ -7,6 +7,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -25,6 +26,7 @@ import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @PostConstruct
@@ -64,6 +66,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/test/student").hasRole("STUDENT")
                 .requestMatchers("/api/test/staff").hasRole("STAFF")
                 .requestMatchers("/api/reports", "/api/reports/**").permitAll()
+                .requestMatchers("/api/staff/reports").permitAll() // Allow access to this endpoint, we'll use @PreAuthorize for security
                 .requestMatchers("/api/staff/**").hasRole("STAFF")
                 .anyRequest().authenticated()
             )

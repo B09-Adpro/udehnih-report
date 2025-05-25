@@ -112,10 +112,26 @@ public class ReportController {
         log.info("Role from token: {}", role);
 
         // Check if the user has STUDENT role - only students can access reports
-        if (!AppConstants.STUDENT_ROLE.equals(role)) {
-            log.warn("User {} with role {} attempted to access student reports", username, role);
+        // The role string may contain multiple roles separated by commas
+        boolean hasStudentRole = false;
+        
+        // Split the role string by commas to check each role
+        String[] roles = role.split(",");
+        for (String singleRole : roles) {
+            // Remove the ROLE_ prefix if present
+            String cleanRole = singleRole.trim().replace(AppConstants.ROLE_PREFIX, "");
+            if (AppConstants.STUDENT_ROLE.equals(cleanRole)) {
+                hasStudentRole = true;
+                break;
+            }
+        }
+        
+        if (!hasStudentRole) {
+            log.warn("User {} with roles {} attempted to access student reports but lacks STUDENT role", username, role);
             return CompletableFuture.completedFuture(ResponseEntity.status(400).body(List.of()));
         }
+        
+        log.info("User {} has STUDENT role, allowing access to reports", username);
 
         // Handle both case variants of the parameter
         String effectiveStudentId = studentId;

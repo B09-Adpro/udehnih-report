@@ -61,40 +61,65 @@ public class CustomUserDetailsService implements UserDetailsService {
             
             // Get the user's ID to look up their role
             Long userId = ((Number) userData.get("id")).longValue();
+            log.info("User ID for {}: {}", email, userId);
             
-            // Query to get the user's role from the roles and user_roles tables
+            // Query to get all user's roles from the roles and user_roles tables
             String roleSql = 
                 "SELECT r.name FROM roles r " +
                 "JOIN user_roles ur ON r.id = ur.role_id " +
                 "WHERE ur.user_id = ?";
             
-            // Default role if none is found
-            String userRole = AppConstants.STUDENT_ROLE; // Default role
+            log.info("Executing role query for loadUserByUsername: {}", roleSql);
+            
+            // List to store all user roles
+            List<SimpleGrantedAuthority> authorities = new java.util.ArrayList<>();
             
             try {
-                // Try to get the role from the database
-                String role = authJdbcTemplate.queryForObject(roleSql, String.class, userId);
-                if (role != null) {
-                    userRole = role;
-                    log.info("Found role for user {}: {}", email, userRole);
+                // Try to get all roles from the database
+                log.info("About to execute queryForList for roles with userId: {}", userId);
+                List<String> roles;
+                try {
+                    roles = authJdbcTemplate.queryForList(roleSql, String.class, userId);
+                    log.info("Successfully retrieved {} roles for user {}: {}", roles.size(), email, roles);
+                } catch (org.springframework.dao.IncorrectResultSizeDataAccessException ex) {
+                    // This exception occurs when queryForObject is used but multiple results are found
+                    // Let's handle it by getting all roles instead
+                    log.warn("Multiple roles found for user {}, switching to queryForList", email);
+                    roles = authJdbcTemplate.queryForList(roleSql, String.class, userId);
+                    log.info("Successfully retrieved {} roles using queryForList: {}", roles.size(), roles);
+                } catch (Exception ex) {
+                    log.error("Exception in queryForList for roles: {}", ex.getMessage(), ex);
+                    throw ex;
                 }
-            } catch (EmptyResultDataAccessException e) {
-                // No role found, use the default
-                log.warn("No role found for user {}, using default: {}", email, userRole);
+                
+                if (roles != null && !roles.isEmpty()) {
+                    // Add all roles found in the database
+                    for (String role : roles) {
+                        // Format the role name for Spring Security (add ROLE_ prefix if not already present)
+                        String roleName = role.startsWith(AppConstants.ROLE_PREFIX) ? 
+                                          role : AppConstants.ROLE_PREFIX + role.toUpperCase();
+                        authorities.add(new SimpleGrantedAuthority(roleName));
+                        log.info("Added role for user {}: {}", email, roleName);
+                    }
+                } else {
+                    // No roles found, use the default STUDENT role
+                    String defaultRole = AppConstants.ROLE_PREFIX + AppConstants.STUDENT_ROLE;
+                    authorities.add(new SimpleGrantedAuthority(defaultRole));
+                    log.warn("No roles found for user {}, using default: {}", email, defaultRole);
+                }
             } catch (DataAccessException e) {
                 // Error querying roles, log and use default
-                log.error("Error querying roles for user {}: {}", email, e.getMessage());
-                log.warn("Using default role: {}", userRole);
+                log.error("Error querying roles for user {}: {}", email, e.getMessage(), e);
+                String defaultRole = AppConstants.ROLE_PREFIX + AppConstants.STUDENT_ROLE;
+                authorities.add(new SimpleGrantedAuthority(defaultRole));
+                log.warn("Using default role due to error: {}", defaultRole);
             }
             
-            // Format the role name for Spring Security (add ROLE_ prefix)
-            String roleName = AppConstants.ROLE_PREFIX + userRole.toUpperCase();
-            
-            // Build and return the user details
+            // Build and return the user details with all authorities
             return User.builder()
                 .username((String) userData.get("email"))
                 .password((String) userData.get("password"))
-                .authorities(new SimpleGrantedAuthority(roleName))
+                .authorities(authorities)
                 .build();
                 
         } catch (Exception e) {
@@ -129,7 +154,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             String sql = "SELECT id, email, name FROM users WHERE email = ?";
             Map<String, Object> userInfo = authJdbcTemplate.queryForMap(sql, email);
             
-            // Get user role if available
+            // Get user roles if available
             try {
                 Long userId = ((Number) userInfo.get("id")).longValue();
                 String roleSql = 
@@ -137,15 +162,51 @@ public class CustomUserDetailsService implements UserDetailsService {
                     "JOIN user_roles ur ON r.id = ur.role_id " +
                     "WHERE ur.user_id = ?";
                 
-                String role = authJdbcTemplate.queryForObject(roleSql, String.class, userId);
-                if (role != null) {
-                    userInfo.put("role", role);
+                log.info("Executing role query for user ID {}: {}", userId, roleSql);
+                
+                // Get all roles for the user
+                List<String> roles;
+                try {
+                    roles = authJdbcTemplate.queryForList(roleSql, String.class, userId);
+                    log.info("Found {} roles for user {}: {}", roles.size(), email, roles);
+                } catch (org.springframework.dao.IncorrectResultSizeDataAccessException ex) {
+                    // This exception occurs when queryForObject is used but multiple results are found
+                    // Let's handle it by getting all roles instead
+                    log.warn("Multiple roles found for user {}, switching to queryForList", email);
+                    roles = authJdbcTemplate.queryForList(roleSql, String.class, userId);
+                    log.info("Successfully retrieved {} roles using queryForList: {}", roles.size(), roles);
+                } catch (Exception e) {
+                    log.error("Error in queryForList for roles: {}", e.getMessage(), e);
+                    throw e;
+                }
+                
+                if (roles != null && !roles.isEmpty()) {
+                    // Store the primary role (first one) for backward compatibility
+                    userInfo.put("role", roles.get(0));
+                    log.info("Set primary role for user {}: {}", email, roles.get(0));
+                    
+                    // Store all roles as a comma-separated string
+                    StringBuilder allRoles = new StringBuilder();
+                    for (String role : roles) {
+                        if (allRoles.length() > 0) {
+                            allRoles.append(",");
+                        }
+                        allRoles.append(role);
+                    }
+                    userInfo.put("allRoles", allRoles.toString());
+                    log.info("Set all roles for user {}: {}", email, allRoles.toString());
                 } else {
-                    userInfo.put("role", AppConstants.STUDENT_ROLE); // Default role
+                    // No roles found, use default
+                    userInfo.put("role", AppConstants.STUDENT_ROLE);
+                    userInfo.put("allRoles", AppConstants.STUDENT_ROLE);
+                    log.warn("No roles found for user {}, using default: {}", email, AppConstants.STUDENT_ROLE);
                 }
             } catch (Exception roleEx) {
-                // If we can't get the role, use default
-                userInfo.put("role", "STUDENT");
+                // If we can't get the roles, use default
+                log.error("Error getting roles for user {}: {}", email, roleEx.getMessage(), roleEx);
+                userInfo.put("role", AppConstants.STUDENT_ROLE);
+                userInfo.put("allRoles", AppConstants.STUDENT_ROLE);
+                log.warn("Using default role for user {} due to error: {}", email, AppConstants.STUDENT_ROLE);
             }
             
             return Optional.of(userInfo);

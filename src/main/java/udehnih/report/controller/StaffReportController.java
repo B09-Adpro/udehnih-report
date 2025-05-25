@@ -6,6 +6,9 @@ import udehnih.report.dto.RejectionRequestDto;
 import udehnih.report.dto.ReportResponseDto;
 import udehnih.report.dto.ReportMapper;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -19,6 +22,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/staff/reports")
+@PreAuthorize("hasRole('STAFF')")
 public class StaffReportController {
 
     private final ReportService reportService;
@@ -28,11 +32,26 @@ public class StaffReportController {
     }
 
     @GetMapping
-    public CompletableFuture<ResponseEntity<List<ReportResponseDto>>> getAllReports() {
+    public CompletableFuture<ResponseEntity<?>> getAllReports() {
+        // Get the current authentication
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        
+        // Check if the user has the STAFF role
+        boolean hasStaffRole = authentication != null && 
+                              authentication.getAuthorities().stream()
+                                  .anyMatch(a -> a.getAuthority().equals("ROLE_STAFF"));
+        
+        if (!hasStaffRole) {
+            return CompletableFuture.completedFuture(
+                ResponseEntity.status(403).body("Access denied: STAFF role required"));
+        }
+        
         return reportService.getAllReports()
-            .thenApply(reports -> reports.stream()
-                .map(ReportMapper::toDto)
-                .collect(Collectors.toList()))
+            .thenApply(reports -> {
+                return reports.stream()
+                    .map(ReportMapper::toDto)
+                    .collect(Collectors.toList());
+            })
             .thenApply(ResponseEntity::ok);
     }
 

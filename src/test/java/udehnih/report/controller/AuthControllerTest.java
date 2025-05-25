@@ -114,6 +114,9 @@ class AuthControllerTest {
         assertEquals(testName, responseBody.get("name"));
         assertEquals(1L, responseBody.get("userId"));
         assertEquals(testToken, responseBody.get("refreshToken"));
+        
+        // No need to verify interactions with the mocks since we're using a spy to return a mock response
+        // The real implementation is never called
     }
 
     @Test

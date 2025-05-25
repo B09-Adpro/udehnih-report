@@ -16,10 +16,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 import udehnih.report.util.AppConstants;
 import udehnih.report.util.JwtUtil;
+import udehnih.report.service.CustomUserDetailsService;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 @RestController
@@ -43,7 +45,9 @@ public class AuthController {
 
     @Autowired
     private AuthenticationManager authenticationManager;
-
+    
+    @Autowired
+    private CustomUserDetailsService userDetailsService;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {
@@ -58,35 +62,54 @@ public class AuthController {
                 ));
             }
 
-
+            // Authenticate the user
             Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(email, password)
             );
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-
-            String role = authentication.getAuthorities().iterator().next().getAuthority();
-            String token = jwtUtil.generateToken(email, role);
+            // Get user info with all roles
+            Optional<Map<String, Object>> userInfoOpt = userDetailsService.getUserInfoByEmail(email);
+            if (!userInfoOpt.isPresent()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("authenticated", false, "message", "User not found"));
+            }
             
-            String sql = "SELECT id, name FROM users WHERE email = ?";
-            Map<String, Object> userInfo = authJdbcTemplate.queryForMap(sql, email);
+            Map<String, Object> userInfo = userInfoOpt.get();
             
-            // Create the response with headers
+            // Get primary role and all roles
+            String primaryRole = (String) userInfo.getOrDefault("role", AppConstants.STUDENT_ROLE);
+            String allRolesStr = (String) userInfo.getOrDefault("allRoles", primaryRole);
+            
+            // Ensure roles have ROLE_ prefix
+            if (!primaryRole.startsWith(AppConstants.ROLE_PREFIX)) {
+                primaryRole = AppConstants.ROLE_PREFIX + primaryRole;
+            }
+            
+            // Generate JWT token with all roles
+            String token = jwtUtil.generateToken(email, allRolesStr);
+            
+            // Set token in response headers
             HttpHeaders headers = new HttpHeaders();
-            headers.add("Authorization", "Bearer " + token);
+            headers.add(AppConstants.AUTHORIZATION_HEADER, AppConstants.BEARER_PREFIX + token);
+            
+            // Set role headers for CORS
+            headers.add("X-Auth-Role", primaryRole);
+            headers.add("X-Auth-Roles", allRolesStr);
+            
+            // Set other auth headers
             headers.add("X-Auth-Status", "authenticated");
             headers.add("X-Auth-Username", email);
-            headers.add("X-Auth-Role", role.replace(AppConstants.ROLE_PREFIX, ""));
             headers.add("X-Auth-Name", (String) userInfo.get("name"));
             headers.add("X-Auth-Token", token);
             headers.add("X-User-Id", userInfo.get("id").toString());
             
             // Add Access-Control-Expose-Headers to ensure frontend can read these headers
             headers.add("Access-Control-Expose-Headers", 
-                "Authorization, X-Auth-Status, X-Auth-Username, X-Auth-Role, X-Auth-Name, X-Auth-Token, X-User-Id");
+                "Authorization, X-Auth-Status, X-Auth-Username, X-Auth-Role, X-Auth-Roles, X-Auth-Name, X-Auth-Token, X-User-Id");
             
             // Create a response that exactly matches what the frontend expects
-            Map<String, Object> responseBody = new HashMap<String, Object>();
+            Map<String, Object> responseBody = new HashMap<>();
             
             // Core authentication data
             responseBody.put("authenticated", true);
@@ -96,19 +119,25 @@ public class AuthController {
             
             // IMPORTANT: Use userId instead of id to match frontend expectations
             responseBody.put("userId", userInfo.get("id"));
+            responseBody.put("id", userInfo.get("id")); // For backward compatibility
+            
+            // Process roles for response
+            String primaryRoleWithoutPrefix = primaryRole.replace(AppConstants.ROLE_PREFIX, "");
+            responseBody.put("role", primaryRoleWithoutPrefix);
+            
+            // Process all roles for the roles array
+            String[] allRoles = allRolesStr.split(",");
+            String[] processedRoles = new String[allRoles.length];
+            
+            for (int i = 0; i < allRoles.length; i++) {
+                processedRoles[i] = allRoles[i].replace(AppConstants.ROLE_PREFIX, "");
+            }
+            
+            // Include all roles as a list
+            responseBody.put("roles", processedRoles);
             
             // Include refreshToken for frontend compatibility
             responseBody.put("refreshToken", token);
-            
-            // Add roles as an array (for frontend compatibility)
-            // This is critical - frontend expects a roles array, not a single role string
-            java.util.List<String> roles = new java.util.ArrayList<String>();
-            roles.add(role.replace(AppConstants.ROLE_PREFIX, ""));
-            responseBody.put("roles", roles);
-            
-            // For backward compatibility, also include these fields
-            responseBody.put("id", userInfo.get("id"));
-            responseBody.put("role", role.replace(AppConstants.ROLE_PREFIX, ""));
             
             return ResponseEntity.ok()
                 .headers(headers)

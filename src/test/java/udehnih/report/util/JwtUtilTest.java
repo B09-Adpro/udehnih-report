@@ -152,6 +152,24 @@ class JwtUtilTest {
     }
     
     @Test
+    void generateAndExtractToken_ShouldHandleMultipleRoles() {
+        // Test with multiple roles
+        String multipleRoles = "STUDENT,STAFF,TUTOR";
+        String token = jwtUtil.generateToken(testEmail, multipleRoles);
+        
+        // Extract the roles
+        String extractedRoles = jwtUtil.extractRole(token);
+        
+        // Verify all roles are present with ROLE_ prefix
+        assertTrue(extractedRoles.contains(AppConstants.ROLE_PREFIX + "STUDENT"));
+        assertTrue(extractedRoles.contains(AppConstants.ROLE_PREFIX + "STAFF"));
+        assertTrue(extractedRoles.contains(AppConstants.ROLE_PREFIX + "TUTOR"));
+        
+        // Verify username is still correct
+        assertEquals(testEmail, jwtUtil.extractUsername(token));
+    }
+    
+    @Test
     void extractClaim_ShouldHandleException() {
         // Test with an invalid token
         String invalidToken = "invalid.token.string";

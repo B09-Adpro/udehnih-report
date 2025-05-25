@@ -21,7 +21,6 @@ import udehnih.report.util.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Enumeration;
 
 @Slf4j
@@ -87,6 +86,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         
         if (username == null) {
             log.warn("Username extracted from token is null");
+            SecurityContextHolder.clearContext(); // Clear context if username is null
             return;
         }
         
@@ -98,16 +98,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      */
     private void authenticateUser(HttpServletRequest request, HttpServletResponse response, 
                                  String username, String role, String jwt) {
-        // Ensure role has ROLE_ prefix
-        if (!role.startsWith(AppConstants.ROLE_PREFIX)) {
-            role = AppConstants.ROLE_PREFIX + role;
+        // Parse the role string which might contain multiple roles
+        String[] roleArray = role.split(",");
+        java.util.List<SimpleGrantedAuthority> authorities = new java.util.ArrayList<>();
+        
+        // Process each role
+        for (String singleRole : roleArray) {
+            // Ensure role has ROLE_ prefix
+            if (!singleRole.trim().startsWith(AppConstants.ROLE_PREFIX)) {
+                singleRole = AppConstants.ROLE_PREFIX + singleRole.trim();
+            }
+            authorities.add(new SimpleGrantedAuthority(singleRole));
         }
         
-        UserDetails userDetails = new User(username, "", 
-            Collections.singleton(new SimpleGrantedAuthority(role)));
+        // If no roles were found, use the default STUDENT role
+        if (authorities.isEmpty()) {
+            authorities.add(new SimpleGrantedAuthority(AppConstants.ROLE_PREFIX + AppConstants.STUDENT_ROLE));
+        }
+        
+        UserDetails userDetails = new User(username, "", authorities);
 
         if (!jwtUtil.validateToken(jwt, userDetails)) {
             log.warn("Token validation failed - token may be expired or invalid");
+            SecurityContextHolder.clearContext(); // Clear context if token validation fails
             return;
         }
         

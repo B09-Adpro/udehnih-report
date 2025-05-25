@@ -7,12 +7,17 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import udehnih.report.util.AppConstants;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -49,7 +54,10 @@ class CustomUserDetailsServiceTest {
         userData.put("name", testName);
 
         when(authJdbcTemplate.queryForMap(anyString(), eq(testEmail.trim()))).thenReturn(userData);
-        when(authJdbcTemplate.queryForObject(anyString(), eq(String.class), eq(testId))).thenReturn("STUDENT");
+        
+        List<String> roles = Collections.singletonList("STUDENT");
+        when(authJdbcTemplate.queryForList(anyString(), eq(String.class), eq(testId)))
+                .thenReturn(roles);
 
         // Act
         UserDetails userDetails = userDetailsService.loadUserByUsername(testEmail);
@@ -62,7 +70,41 @@ class CustomUserDetailsServiceTest {
         
         // Verify interactions
         verify(authJdbcTemplate).queryForMap(anyString(), eq(testEmail.trim()));
-        verify(authJdbcTemplate).queryForObject(anyString(), eq(String.class), eq(testId));
+        verify(authJdbcTemplate).queryForList(anyString(), eq(String.class), eq(testId));
+    }
+
+    @Test
+    void loadUserByUsername_ShouldHandleMultipleRoles() {
+        // Arrange
+        Map<String, Object> userData = new HashMap<>();
+        userData.put("id", testId);
+        userData.put("email", testEmail);
+        userData.put("password", testPassword);
+        userData.put("name", testName);
+
+        when(authJdbcTemplate.queryForMap(anyString(), eq(testEmail.trim()))).thenReturn(userData);
+        
+        List<String> roles = Arrays.asList("STUDENT", "STAFF", "TUTOR");
+        when(authJdbcTemplate.queryForList(anyString(), eq(String.class), eq(testId)))
+                .thenReturn(roles);
+
+        // Act
+        UserDetails userDetails = userDetailsService.loadUserByUsername(testEmail);
+
+        // Assert
+        assertNotNull(userDetails);
+        assertEquals(testEmail, userDetails.getUsername());
+        assertEquals(testPassword, userDetails.getPassword());
+        
+        Collection<? extends GrantedAuthority> authorities = userDetails.getAuthorities();
+        assertEquals(3, authorities.size());
+        assertTrue(authorities.contains(new SimpleGrantedAuthority("ROLE_STUDENT")));
+        assertTrue(authorities.contains(new SimpleGrantedAuthority("ROLE_STAFF")));
+        assertTrue(authorities.contains(new SimpleGrantedAuthority("ROLE_TUTOR")));
+        
+        // Verify interactions
+        verify(authJdbcTemplate).queryForMap(anyString(), eq(testEmail.trim()));
+        verify(authJdbcTemplate).queryForList(anyString(), eq(String.class), eq(testId));
     }
 
     @Test
@@ -75,8 +117,8 @@ class CustomUserDetailsServiceTest {
         userData.put("name", testName);
 
         when(authJdbcTemplate.queryForMap(anyString(), eq(testEmail.trim()))).thenReturn(userData);
-        when(authJdbcTemplate.queryForObject(anyString(), eq(String.class), eq(testId)))
-                .thenThrow(new EmptyResultDataAccessException(1));
+        when(authJdbcTemplate.queryForList(anyString(), eq(String.class), eq(testId)))
+                .thenReturn(Collections.emptyList());
 
         // Act
         UserDetails userDetails = userDetailsService.loadUserByUsername(testEmail);
@@ -86,6 +128,7 @@ class CustomUserDetailsServiceTest {
         assertEquals(testEmail, userDetails.getUsername());
         assertEquals(testPassword, userDetails.getPassword());
         assertTrue(userDetails.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_STUDENT")));
+        assertEquals(1, userDetails.getAuthorities().size());
     }
 
     @Test
