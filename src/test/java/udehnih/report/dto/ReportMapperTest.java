@@ -11,11 +11,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ReportMapperTest {
     @Test
-    void defaultMapperConstructor() {
-        new ReportMapper();
-    }
-
-    @Test
     void toEntity_WithValidDto_ReturnsReport() {
         ReportRequestDto dto = new ReportRequestDto();
         dto.setStudentId("12345");

@@ -92,8 +92,5 @@ class ReportFactoryTest {
         assertTrue(report.getCreatedAt().isBefore(after));
     }
 
-    @Test
-    void coverDefaultConstructor() {
-        new ReportFactory();
-    }
+    // No need to test the private constructor of a utility class
 } 

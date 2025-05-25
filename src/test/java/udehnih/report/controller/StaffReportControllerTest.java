@@ -6,14 +6,16 @@ import udehnih.report.factory.ReportFactory;
 import udehnih.report.enums.ReportStatus;
 import udehnih.report.dto.RejectionRequestDto;
 import udehnih.report.exception.ReportNotFoundException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import udehnih.report.config.TestConfig;
+
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
+
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -23,14 +25,17 @@ import java.util.concurrent.CompletableFuture;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 
 @WebMvcTest(StaffReportController.class)
+@Import(TestConfig.class)
+@ActiveProfiles("test")
 public class StaffReportControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @Autowired
     private ReportService reportService;
 
     @Test
