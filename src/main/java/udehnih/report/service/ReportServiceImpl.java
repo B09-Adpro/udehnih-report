@@ -7,6 +7,7 @@ import udehnih.report.enums.ReportStatus;
 import udehnih.report.dto.RejectionRequestDto;
 import udehnih.report.exception.ReportNotFoundException;
 import udehnih.report.exception.InvalidReportStateException;
+import udehnih.report.util.AppConstants;
 
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
@@ -46,7 +47,7 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public Report updateReport(final Integer reportId, final Report updatedReport) {
         final Report report = reportRepository.findById(reportId)
-                .orElseThrow(() -> new ReportNotFoundException("Report not found with id: " + reportId));
+                .orElseThrow(() -> new ReportNotFoundException(AppConstants.REPORT_NOT_FOUND_MSG + reportId));
 
         report.setTitle(updatedReport.getTitle());
         report.setDetail(updatedReport.getDetail());
@@ -79,7 +80,7 @@ public class ReportServiceImpl implements ReportService {
     @Modifying
     public Report processReport(final Integer reportId, final RejectionRequestDto rejectionRequest) {
         final Report report = reportRepository.findById(reportId)
-                .orElseThrow(() -> new ReportNotFoundException("Report not found with id: " + reportId));
+                .orElseThrow(() -> new ReportNotFoundException(AppConstants.REPORT_NOT_FOUND_MSG + reportId));
 
         if (!report.isOpen()) {
             throw new InvalidReportStateException("Report cannot be processed because it is not in OPEN status");

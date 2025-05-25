@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import udehnih.report.config.JwtConfig;
+import udehnih.report.util.AppConstants;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
@@ -27,7 +28,7 @@ public class JwtUtil {
 
     public String generateToken(String email, String role) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("role", role.startsWith("ROLE_") ? role : "ROLE_" + role);
+        claims.put("role", role.startsWith(AppConstants.ROLE_PREFIX) ? role : AppConstants.ROLE_PREFIX + role);
         
         return Jwts.builder()
                 .setClaims(claims)
@@ -48,12 +49,12 @@ public class JwtUtil {
             String role = claims.get("role", String.class);
             if (role == null) {
                 System.out.println("Role claim is missing in the token");
-                return "ROLE_STUDENT"; // Default role as fallback
+                return AppConstants.ROLE_PREFIX + AppConstants.STUDENT_ROLE; // Default role as fallback
             }
-            return role.startsWith("ROLE_") ? role : "ROLE_" + role;
+            return role.startsWith(AppConstants.ROLE_PREFIX) ? role : AppConstants.ROLE_PREFIX + role;
         } catch (Exception e) {
             System.out.println("Error extracting role from token: " + e.getMessage());
-            return "ROLE_STUDENT"; // Default role as fallback
+            return AppConstants.ROLE_PREFIX + AppConstants.STUDENT_ROLE; // Default role as fallback
         }
     }
 

@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import udehnih.report.factory.ReportFactory;
 import udehnih.report.enums.ReportStatus;
 import udehnih.report.enums.RejectionMessage;
+import udehnih.report.util.AppConstants;
 import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -11,7 +12,7 @@ public class ReportTest {
     @Test
     void testReportBuilder() {
         Integer reportId = 1;
-        String studentId = "12345";
+        String studentId = AppConstants.TEST_STUDENT_ID;
         String title = "Test Report";
         String detail = "This is a test report";
         ReportStatus status = ReportStatus.OPEN;
@@ -56,7 +57,7 @@ public class ReportTest {
     @Test
     void testReportAllArgsConstructor() {
         Integer reportId = 1;
-        String studentId = "12345";
+        String studentId = AppConstants.TEST_STUDENT_ID;
         String title = "Test Report";
         String detail = "This is a test report";
         ReportStatus status = ReportStatus.OPEN;
@@ -80,7 +81,7 @@ public class ReportTest {
     void testReportSettersAndGetters() {
         Report report = new Report();
         Integer reportId = 1;
-        String studentId = "12345";
+        String studentId = AppConstants.TEST_STUDENT_ID;
         String title = "Test Report";
         String detail = "This is a test report";
         ReportStatus status = ReportStatus.OPEN;

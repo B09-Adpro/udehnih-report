@@ -14,6 +14,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
+import udehnih.report.util.AppConstants;
 import udehnih.report.util.JwtUtil;
 
 import java.time.LocalDateTime;
@@ -47,13 +48,13 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {
         try {
-            String email = loginRequest.get("email");
+            String email = loginRequest.get(AppConstants.EMAIL_FIELD);
             String password = loginRequest.get("password");
 
             // Basic validation
             if (email == null || password == null) {
                 return ResponseEntity.badRequest().body(Map.of(
-                    "error", "Email and password are required"
+                    AppConstants.ERROR_KEY, "Email and password are required"
                 ));
             }
 
@@ -75,7 +76,7 @@ public class AuthController {
             headers.add("Authorization", "Bearer " + token);
             headers.add("X-Auth-Status", "authenticated");
             headers.add("X-Auth-Username", email);
-            headers.add("X-Auth-Role", role.replace("ROLE_", ""));
+            headers.add("X-Auth-Role", role.replace(AppConstants.ROLE_PREFIX, ""));
             headers.add("X-Auth-Name", (String) userInfo.get("name"));
             headers.add("X-Auth-Token", token);
             headers.add("X-User-Id", userInfo.get("id").toString());
@@ -102,12 +103,12 @@ public class AuthController {
             // Add roles as an array (for frontend compatibility)
             // This is critical - frontend expects a roles array, not a single role string
             java.util.List<String> roles = new java.util.ArrayList<String>();
-            roles.add(role.replace("ROLE_", ""));
+            roles.add(role.replace(AppConstants.ROLE_PREFIX, ""));
             responseBody.put("roles", roles);
             
             // For backward compatibility, also include these fields
             responseBody.put("id", userInfo.get("id"));
-            responseBody.put("role", role.replace("ROLE_", ""));
+            responseBody.put("role", role.replace(AppConstants.ROLE_PREFIX, ""));
             
             return ResponseEntity.ok()
                 .headers(headers)
@@ -116,12 +117,12 @@ public class AuthController {
         } catch (AuthenticationException e) {
             log.error("Authentication failed", e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                "error", "Invalid credentials"
+                AppConstants.ERROR_KEY, "Invalid credentials"
             ));
         } catch (Exception e) {
             log.error("Error during login", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                "error", "Login failed: " + e.getMessage()
+                AppConstants.ERROR_KEY, "Login failed: " + e.getMessage()
             ));
         }
     }
@@ -132,27 +133,27 @@ public class AuthController {
     public ResponseEntity<?> register(@RequestBody Map<String, String> registrationRequest) {
         try {
             String name = registrationRequest.get("name");
-            String email = registrationRequest.get("email");
+            String email = registrationRequest.get(AppConstants.EMAIL_FIELD);
             String password = registrationRequest.get("password");
 
             // Basic validation
             if (name == null || email == null || password == null) {
                 return ResponseEntity.badRequest().body(Map.of(
-                    "error", "Name, email, and password are required"
+                    AppConstants.ERROR_KEY, "Name, email, and password are required"
                 ));
             }
 
             // Validate email format
             if (!EMAIL_PATTERN.matcher(email).matches()) {
                 return ResponseEntity.badRequest().body(Map.of(
-                    "error", "Invalid email format"
+                    AppConstants.ERROR_KEY, "Invalid email format"
                 ));
             }
 
             // Validate password length
             if (password.length() < 8) {
                 return ResponseEntity.badRequest().body(Map.of(
-                    "error", "Password must be at least 8 characters long"
+                    AppConstants.ERROR_KEY, "Password must be at least 8 characters long"
                 ));
             }
 
@@ -161,7 +162,7 @@ public class AuthController {
             int count = authJdbcTemplate.queryForObject(checkEmailSql, Integer.class, email);
             if (count > 0) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                    "error", "Email address is already registered"
+                    AppConstants.ERROR_KEY, "Email address is already registered"
                 ));
             }
 
@@ -176,16 +177,16 @@ public class AuthController {
             // Assign STUDENT role to the new user
             try {
                 // Get the STUDENT role ID
-                String getRoleIdSql = "SELECT id FROM roles WHERE name = 'STUDENT'";
+                String getRoleIdSql = "SELECT id FROM roles WHERE name = '" + AppConstants.STUDENT_ROLE + "'";
                 Long roleId = authJdbcTemplate.queryForObject(getRoleIdSql, Long.class);
                 
                 // Assign role to user
                 String assignRoleSql = "INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)";
                 authJdbcTemplate.update(assignRoleSql, userId, roleId);
                 
-                log.info("Assigned STUDENT role to new user: {}", email);
+                log.info("Assigned {} role to new user: {}", AppConstants.STUDENT_ROLE, email);
             } catch (Exception roleEx) {
-                log.error("Failed to assign STUDENT role to user: {}", email, roleEx);
+                log.error("Failed to assign {} role to user: {}", AppConstants.STUDENT_ROLE, email, roleEx);
                 // Continue with registration even if role assignment fails
             }
 
@@ -196,7 +197,7 @@ public class AuthController {
         } catch (Exception e) {
             log.error("Error during registration", e);
             return ResponseEntity.internalServerError().body(Map.of(
-                "error", "Registration failed: " + e.getMessage()
+                AppConstants.ERROR_KEY, "Registration failed: " + e.getMessage()
             ));
         }
     }

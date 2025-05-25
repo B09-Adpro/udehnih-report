@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import udehnih.report.util.AppConstants;
 import udehnih.report.util.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -66,8 +67,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 
                 if (username != null) {
                     // Ensure role has ROLE_ prefix
-                    if (!role.startsWith("ROLE_")) {
-                        role = "ROLE_" + role;
+                    if (!role.startsWith(AppConstants.ROLE_PREFIX)) {
+                        role = AppConstants.ROLE_PREFIX + role;
                     }
                     
                     UserDetails userDetails = new User(username, "", 
@@ -88,7 +89,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         // Add authentication headers to the response
                         response.setHeader("X-Auth-Status", "authenticated");
                         response.setHeader("X-Auth-Username", username);
-                        response.setHeader("X-Auth-Role", role.replace("ROLE_", ""));
+                        response.setHeader("X-Auth-Role", role.replace(AppConstants.ROLE_PREFIX, ""));
                         
                         // Set comprehensive authentication headers for the frontend
                         response.setHeader("Authorization", "Bearer " + jwt);
