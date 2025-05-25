@@ -23,6 +23,13 @@ import javax.sql.DataSource;
 )
 @EntityScan(basePackages = "udehnih.report.model")
 public class MainDataSourceConfig {
+    
+    /**
+     * Default constructor for Spring configuration class.
+     */
+    public MainDataSourceConfig() {
+        // Default constructor required by Spring
+    }
 
     @Primary
     @Bean
@@ -40,7 +47,7 @@ public class MainDataSourceConfig {
     @Primary
     @Bean
     public LocalContainerEntityManagerFactoryBean mainEntityManagerFactory(
-            EntityManagerFactoryBuilder builder) {
+            final EntityManagerFactoryBuilder builder) {
         return builder
                 .dataSource(mainDataSource())
                 .packages("udehnih.report.model")
@@ -51,7 +58,7 @@ public class MainDataSourceConfig {
     @Primary
     @Bean
     public JpaTransactionManager mainTransactionManager(
-            @Qualifier("mainEntityManagerFactory") EntityManagerFactory mainEntityManagerFactory) {
-        return new JpaTransactionManager(mainEntityManagerFactory);
+            @Qualifier("mainEntityManagerFactory") final EntityManagerFactory emFactory) {
+        return new JpaTransactionManager(emFactory);
     }
 }

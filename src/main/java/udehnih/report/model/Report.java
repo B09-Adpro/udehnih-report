@@ -9,6 +9,9 @@ import udehnih.report.enums.RejectionMessage;
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
+import static jakarta.persistence.GenerationType.IDENTITY;
+import static jakarta.persistence.EnumType.STRING;
+
 @Entity
 @Table(name = "report")
 @Data
@@ -19,7 +22,7 @@ import java.time.LocalDateTime;
 @ToString
 public class Report {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = IDENTITY)
     @EqualsAndHashCode.Include
     private Integer reportId;
 
@@ -32,11 +35,11 @@ public class Report {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String detail;
 
-    @Enumerated(EnumType.STRING)
+    @Enumerated(STRING)
     @Column(nullable = false, columnDefinition = "varchar(255) check (status in ('OPEN', 'CLOSED', 'IN_PROGRESS', 'RESOLVED', 'REJECTED'))")
     private ReportStatus status;
 
-    @Enumerated(EnumType.STRING)
+    @Enumerated(STRING)
     @Column(name = "rejection_message")
     private RejectionMessage rejectionMessage;
 

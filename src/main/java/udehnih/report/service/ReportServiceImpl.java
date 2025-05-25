@@ -7,7 +7,7 @@ import udehnih.report.enums.ReportStatus;
 import udehnih.report.dto.RejectionRequestDto;
 import udehnih.report.exception.ReportNotFoundException;
 import udehnih.report.exception.InvalidReportStateException;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.Modifying;
@@ -20,24 +20,32 @@ import java.util.concurrent.CompletableFuture;
 @Service
 public class ReportServiceImpl implements ReportService {
 
-    @Autowired
-    private ReportRepository reportRepository;
+    private final ReportRepository reportRepository;
+    
+    /**
+     * Constructor for ReportServiceImpl.
+     * 
+     * @param reportRepository the repository for Report entities
+     */
+    public ReportServiceImpl(ReportRepository reportRepository) {
+        this.reportRepository = reportRepository;
+    }
 
     @Override
-    public Report createReport(Report report) {
-        Report newReport = ReportFactory.createOpenReport(report.getStudentId(), report.getTitle(), report.getDetail());
+    public Report createReport(final Report report) {
+        final Report newReport = ReportFactory.createOpenReport(report.getStudentId(), report.getTitle(), report.getDetail());
         return reportRepository.save(newReport);
     }
 
     @Override
     @Async("reportTaskExecutor")
-    public CompletableFuture<List<Report>> getUserReports(String studentId) {
+    public CompletableFuture<List<Report>> getUserReports(final String studentId) {
         return reportRepository.findByStudentId(studentId);
     }
 
     @Override
-    public Report updateReport(Integer reportId, Report updatedReport) {
-        Report report = reportRepository.findById(reportId)
+    public Report updateReport(final Integer reportId, final Report updatedReport) {
+        final Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new ReportNotFoundException("Report not found with id: " + reportId));
 
         report.setTitle(updatedReport.getTitle());
@@ -47,7 +55,7 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public void deleteReport(Integer reportId) {
+    public void deleteReport(final Integer reportId) {
         reportRepository.deleteById(reportId);
     }
 
@@ -59,7 +67,7 @@ public class ReportServiceImpl implements ReportService {
     
     @Override
     @Async("reportTaskExecutor")
-    public CompletableFuture<Report> getReportById(Integer reportId) {
+    public CompletableFuture<Report> getReportById(final Integer reportId) {
         return CompletableFuture.supplyAsync(() -> 
             reportRepository.findById(reportId)
                 .orElseThrow(() -> new ReportNotFoundException("Report not found with id: " + reportId))
@@ -69,15 +77,15 @@ public class ReportServiceImpl implements ReportService {
     @Override
     @Transactional
     @Modifying
-    public Report processReport(Integer reportId, RejectionRequestDto rejectionRequest) {
-        Report report = reportRepository.findById(reportId)
+    public Report processReport(final Integer reportId, final RejectionRequestDto rejectionRequest) {
+        final Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new ReportNotFoundException("Report not found with id: " + reportId));
 
         if (!report.isOpen()) {
             throw new InvalidReportStateException("Report cannot be processed because it is not in OPEN status");
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        final LocalDateTime now = LocalDateTime.now();
         
         if (rejectionRequest != null && rejectionRequest.getRejectionMessage() != null) {
             report.setRejectionMessage(rejectionRequest.getRejectionMessage());
