@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import udehnih.report.config.JwtConfig;
-import udehnih.report.util.AppConstants;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
