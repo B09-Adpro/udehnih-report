@@ -1,0 +1,22 @@
+cors:
+  allowed-origins: ${ALLOWED_ORIGINS}
+  allowed-methods: ${ALLOWED_METHODS}
+  allowed-headers: ${ALLOWED_HEADERS}
+  exposed-headers: ${EXPOSED_HEADERS}
+  allow-credentials: ${ALLOWED_CREDENTIALS}
+
+logging:
+  level:
+    org.springframework.security: ${LOG_SECURITY_LEVEL:DEBUG}
+    org.hibernate.SQL: ${LOG_SQL_LEVEL:DEBUG}
+    org.hibernate.type.descriptor.sql.BasicBinder: ${LOG_SQL_PARAMS_LEVEL:DEBUG}
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: ${SHOW_SQL:true}
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
