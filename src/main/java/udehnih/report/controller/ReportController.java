@@ -1,11 +1,14 @@
 package udehnih.report.controller;
-
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,162 +18,102 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import udehnih.report.client.AuthServiceClient;
 import udehnih.report.dto.ReportMapper;
 import udehnih.report.dto.ReportRequestDto;
 import udehnih.report.dto.ReportResponseDto;
 import udehnih.report.model.Report;
-import udehnih.report.service.CustomUserDetailsService;
+import udehnih.report.model.UserInfo;
 import udehnih.report.service.ReportService;
-import udehnih.report.util.AppConstants;
-import udehnih.report.util.JwtUtil;
-
 @Slf4j
 @RestController
 @RequestMapping("/api/reports")
 public class ReportController {
-    
-    // Using constants from AppConstants class
-
     private final ReportService reportService;
-    private final JwtUtil jwtUtil;
-    private final CustomUserDetailsService userDetailsService;
-
-    public ReportController(
-        final ReportService reportService,
-        final JwtUtil jwtUtil,
-        final CustomUserDetailsService userDetailsService
-    ) {
+    @Autowired
+    private AuthServiceClient authServiceClient;
+    public ReportController(final ReportService reportService) {
         this.reportService = reportService;
-        this.jwtUtil = jwtUtil;
-        this.userDetailsService = userDetailsService;
     }
-
     @PostMapping
     public ResponseEntity<ReportResponseDto> createReport(
         @RequestBody final ReportRequestDto request,
         final HttpServletRequest httpRequest
     ) {
-        // Get the JWT token directly from the request
-        final String authHeader = httpRequest.getHeader(AppConstants.AUTHORIZATION_HEADER);
-        if (authHeader == null || !authHeader.startsWith(AppConstants.BEARER_PREFIX)) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(401).build();
         }
-
-        final String token = authHeader.substring(AppConstants.BEARER_PREFIX.length());
-        final String username = jwtUtil.extractUsername(token);
-
+        String username;
+        if (authentication.getPrincipal() instanceof UserDetails) {
+            username = ((UserDetails) authentication.getPrincipal()).getUsername();
+        } else {
+            username = authentication.getName();
+        }
         log.info("Creating report for user: {}", username);
-
-        // Look up the user ID based on the email
-        final String studentId = userDetailsService
-            .getUserIdByEmail(username)
-            .orElse(null);
-
-        if (studentId == null) {
-            log.warn("Could not find studentId for email: {}", username);
+        UserInfo userInfo = authServiceClient.getUserByEmail(username);
+        if (userInfo == null || userInfo.getId() == null) {
+            log.warn("Could not find user info for email: {}", username);
             return ResponseEntity.status(404).build();
         }
-
+        final String studentId = userInfo.getId().toString();
         log.info("Found studentId: {} for email: {}", studentId, username);
-
-        // Set the studentId in the request
         request.setStudentId(studentId);
-
-        // Create a Report entity and explicitly set the studentId
         final Report report = ReportMapper.toEntity(request);
-
-        // Double-check that studentId is set
         if (report.getStudentId() == null) {
             log.warn("StudentId is null after mapping, setting it explicitly");
             report.setStudentId(studentId);
         }
-
         log.info("Creating report with studentId: {}", report.getStudentId());
-
         final Report created = reportService.createReport(report);
         return ResponseEntity.status(201).body(ReportMapper.toDto(created));
     }
-
     @GetMapping
     public CompletableFuture<ResponseEntity<List<ReportResponseDto>>> getUserReports(
         @RequestParam(required = false) final String studentId,
         @RequestParam(required = false) final String StudentId,
         final HttpServletRequest request
     ) {
-        // Get the JWT token directly from the request
-        final String authHeader = request.getHeader(AppConstants.AUTHORIZATION_HEADER);
-        if (authHeader == null || !authHeader.startsWith(AppConstants.BEARER_PREFIX)) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
             return CompletableFuture.completedFuture(ResponseEntity.status(401).body(List.of()));
         }
-        
-        final String token = authHeader.substring(AppConstants.BEARER_PREFIX.length());
-        final String username = jwtUtil.extractUsername(token);
-        final String role = jwtUtil.extractRole(token);
-
-        log.info("JWT token extracted directly in controller");
-        log.info("Username from token: {}", username);
-        log.info("Role from token: {}", role);
-
-        // Check if the user has STUDENT role - only students can access reports
-        // The role string may contain multiple roles separated by commas
-        boolean hasStudentRole = false;
-        
-        // Split the role string by commas to check each role
-        String[] roles = role.split(",");
-        for (String singleRole : roles) {
-            // Remove the ROLE_ prefix if present
-            String cleanRole = singleRole.trim().replace(AppConstants.ROLE_PREFIX, "");
-            if (AppConstants.STUDENT_ROLE.equals(cleanRole)) {
-                hasStudentRole = true;
-                break;
-            }
+        String username;
+        if (authentication.getPrincipal() instanceof UserDetails) {
+            username = ((UserDetails) authentication.getPrincipal()).getUsername();
+        } else {
+            username = authentication.getName();
         }
-        
-        if (!hasStudentRole) {
-            log.warn("User {} with roles {} attempted to access student reports but lacks STUDENT role", username, role);
-            return CompletableFuture.completedFuture(ResponseEntity.status(400).body(List.of()));
+        log.info("Getting reports for authenticated user: {}", username);
+        UserInfo userInfo = authServiceClient.getUserByEmail(username);
+        if (userInfo == null) {
+            log.warn("Could not find user info for email: {}", username);
+            return CompletableFuture.completedFuture(ResponseEntity.status(404).body(List.of()));
         }
-        
+        if (!userInfo.isStudent()) {
+            log.warn("User {} with roles {} attempted to access student reports but lacks STUDENT role", 
+                    username, userInfo.getRoles());
+            return CompletableFuture.completedFuture(ResponseEntity.status(403).body(List.of()));
+        }
         log.info("User {} has STUDENT role, allowing access to reports", username);
-
-        // Handle both case variants of the parameter
         String effectiveStudentId = studentId;
         if (isBlank(effectiveStudentId) && StudentId != null) {
             effectiveStudentId = StudentId;
         }
-
-        // If no studentId provided, look it up based on the email from the JWT token
         if (isBlank(effectiveStudentId)) {
-            log.info("No studentId provided in request, looking up based on email: {}", username);
-            
-            // Look up the user ID based on the email
-            effectiveStudentId = userDetailsService.getUserIdByEmail(username).orElse(null);
-            
-            if (effectiveStudentId == null) {
-                log.warn("Could not find studentId for email: {}", username);
-                return CompletableFuture.completedFuture(ResponseEntity.status(400).body(List.of()));
-            }
-            
-            log.info("Found studentId: {} for email: {}", effectiveStudentId, username);
+            log.info("No studentId provided in request, using authenticated user ID");
+            effectiveStudentId = userInfo.getId().toString();
+            log.info("Using authenticated user ID: {} for email: {}", effectiveStudentId, username);
         }
-
-        // Check if the studentId is empty or blank
         if (isBlank(effectiveStudentId)) {
             log.warn("Empty or blank studentId provided");
             return CompletableFuture.completedFuture(ResponseEntity.status(400).body(List.of()));
         }
-
         log.info("Using studentId: {}", effectiveStudentId);
-
-        // Capture the final studentId for use in lambda
         final String finalStudentId = effectiveStudentId;
-
         try {
-            // Get the reports synchronously first to verify we can access them
             final List<Report> testReports = reportService.getUserReports(finalStudentId).join();
             log.info("Successfully retrieved {} reports for studentId: {}", testReports.size(), finalStudentId);
-            
-            // Now return the async version
             return reportService.getUserReports(finalStudentId)
                 .thenApply(reports -> reports.stream()
                     .map(ReportMapper::toDto)
@@ -185,7 +128,6 @@ public class ReportController {
             return CompletableFuture.completedFuture(ResponseEntity.status(500).body(List.of()));
         }
     }
-
     @PutMapping("/{reportId}")
     public ResponseEntity<ReportResponseDto> updateReport(
         @PathVariable("reportId") final Integer reportId,
@@ -204,7 +146,6 @@ public class ReportController {
         }
         return response;
     }
-
     @DeleteMapping("/{reportId}")
     public ResponseEntity<Void> deleteReport(
         @PathVariable("reportId") final Integer reportId
@@ -219,54 +160,40 @@ public class ReportController {
         }
         return response;
     }
-
     @GetMapping("/{reportId}")
     public CompletableFuture<ResponseEntity<ReportResponseDto>> getReportById(
         @PathVariable("reportId") final Integer reportId,
         final HttpServletRequest request
     ) {
-        // Get the JWT token directly from the request
-        final String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return CompletableFuture.completedFuture(
-                ResponseEntity.status(401).build()
-            );
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return CompletableFuture.completedFuture(ResponseEntity.status(401).build());
         }
-
-        final String token = authHeader.substring(AppConstants.BEARER_PREFIX.length());
-        final String username = jwtUtil.extractUsername(token);
-
-        log.info(
-            "Retrieving report with ID: {} for user: {}",
-            reportId,
-            username
-        );
-
+        String username;
+        if (authentication.getPrincipal() instanceof UserDetails) {
+            username = ((UserDetails) authentication.getPrincipal()).getUsername();
+        } else {
+            username = authentication.getName();
+        }
+        log.info("Retrieving report with ID: {} for user: {}", reportId, username);
+        UserInfo userInfo = authServiceClient.getUserByEmail(username);
+        if (userInfo == null) {
+            log.warn("Could not find user info for email: {}", username);
+            return CompletableFuture.completedFuture(ResponseEntity.status(404).build());
+        }
         return reportService
             .getReportById(reportId)
             .thenApply(report -> {
-                // Check if the user has permission to access this report
-                final String userIdFromToken = userDetailsService
-                    .getUserIdByEmail(username)
-                    .orElse(null);
-                final String role = jwtUtil.extractRole(token);
-
-                // If user is not an admin and not the owner of the report, return 403
-                if (
-                    !"ADMIN".equals(role) &&
-                    !report.getStudentId().equals(userIdFromToken)
-                ) {
+                String userId = userInfo.getId().toString();
+                if (!userInfo.isStaff() && !report.getStudentId().equals(userId)) {
                     log.warn(
                         "User {} attempted to access report {} which belongs to {}",
                         username,
                         reportId,
                         report.getStudentId()
                     );
-                    return ResponseEntity.status(403).<
-                        ReportResponseDto
-                    >build();
+                    return ResponseEntity.status(403).<ReportResponseDto>build();
                 }
-
                 return ResponseEntity.ok(ReportMapper.toDto(report));
             })
             .exceptionally(ex -> {
@@ -274,12 +201,6 @@ public class ReportController {
                 return ResponseEntity.status(404).build();
             });
     }
-
-    /**
-     * Utility method to check if a string is null, empty, or contains only whitespace
-     * @param str the string to check
-     * @return true if the string is null, empty, or contains only whitespace
-     */
     private static boolean isBlank(final String str) {
         return str == null || str.trim().isEmpty();
     }

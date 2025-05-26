@@ -1,7 +1,5 @@
 package udehnih.report.dto;
-
 import lombok.Data;
-
 @Data
 public class ReportRequestDto {
     private String studentId;

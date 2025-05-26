@@ -1,5 +1,4 @@
 package udehnih.report.util;
-
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -8,62 +7,42 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import udehnih.report.config.JwtConfig;
-
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
-
 @Component
 @Slf4j
 public class JwtUtil {
-
     @Autowired
     private JwtConfig jwtConfig;
-
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(jwtConfig.getSecretKey().getBytes(StandardCharsets.UTF_8));
     }
-
-    /**
-     * Generate a JWT token with the given email and role(s)
-     * @param email The user's email
-     * @param role The user's role(s) - can be a single role or a comma-separated list of roles
-     * @return The generated JWT token
-     */
     public String generateToken(String email, String role) {
         Map<String, Object> claims = new HashMap<>();
-        
-        // Check if the role contains multiple roles (comma-separated)
         if (role.contains(",")) {
-            // Process multiple roles
             String[] roles = role.split(",");
             StringBuilder formattedRoles = new StringBuilder();
-            
             for (String singleRole : roles) {
                 String formattedRole = singleRole.trim();
                 if (!formattedRole.startsWith(AppConstants.ROLE_PREFIX)) {
                     formattedRole = AppConstants.ROLE_PREFIX + formattedRole;
                 }
-                
                 if (formattedRoles.length() > 0) {
                     formattedRoles.append(",");
                 }
                 formattedRoles.append(formattedRole);
             }
-            
             claims.put("role", formattedRoles.toString());
-            // Also store the roles as an array for easier processing
             claims.put("roles", formattedRoles.toString().split(","));
         } else {
-            // Single role case
             String formattedRole = role.startsWith(AppConstants.ROLE_PREFIX) ? role : AppConstants.ROLE_PREFIX + role;
             claims.put("role", formattedRole);
             claims.put("roles", new String[]{formattedRole});
         }
-        
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(email)
@@ -72,27 +51,17 @@ public class JwtUtil {
                 .signWith(getSigningKey())
                 .compact();
     }
-
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
-
-    /**
-     * Extract the role(s) from a JWT token
-     * @param token The JWT token
-     * @return The role(s) as a string (comma-separated if multiple)
-     */
     public String extractRole(String token) {
         try {
             final Claims claims = extractAllClaims(token);
-            
-            // First try to get the roles array
             try {
                 Object rolesObj = claims.get("roles");
                 if (rolesObj instanceof String[]) {
                     String[] roles = (String[]) rolesObj;
                     if (roles.length > 0) {
-                        // Join roles with comma
                         StringBuilder roleStr = new StringBuilder();
                         for (String role : roles) {
                             if (roleStr.length() > 0) {
@@ -106,25 +75,20 @@ public class JwtUtil {
             } catch (Exception e) {
                 log.debug("Could not extract roles array, falling back to role string: {}", e.getMessage());
             }
-            
-            // Fallback to the role string
             String role = claims.get("role", String.class);
             if (role == null) {
                 log.warn("Role claim is missing in the token");
-                // Using AppConstants to ensure consistent role format
-                return AppConstants.ROLE_PREFIX + AppConstants.STUDENT_ROLE; // Default role as fallback
+                return AppConstants.ROLE_PREFIX + AppConstants.STUDENT_ROLE; 
             }
             return role.startsWith(AppConstants.ROLE_PREFIX) ? role : AppConstants.ROLE_PREFIX + role;
         } catch (Exception e) {
             log.error("Error extracting role from token: {}", e.getMessage());
-            return AppConstants.ROLE_PREFIX + AppConstants.STUDENT_ROLE; // Default role as fallback
+            return AppConstants.ROLE_PREFIX + AppConstants.STUDENT_ROLE; 
         }
     }
-
     public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
-
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         try {
             final Claims claims = extractAllClaims(token);
@@ -134,7 +98,6 @@ public class JwtUtil {
             return null;
         }
     }
-
     private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
@@ -142,11 +105,9 @@ public class JwtUtil {
                 .parseClaimsJws(token)
                 .getBody();
     }
-
     private Boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
-
     public Boolean validateToken(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));

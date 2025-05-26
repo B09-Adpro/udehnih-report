@@ -1,25 +1,19 @@
 package udehnih.report.enums;
-
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-
 class RejectionMessageTest {
-
     @Test
     void testIncompleteDetailMessage() {
         assertEquals("Detail laporan kurang lengkap", RejectionMessage.INCOMPLETE_DETAIL.getMessage());
     }
-
     @Test
     void testSimilarReportMessage() {
         assertEquals("Laporan serupa sudah ada", RejectionMessage.SIMILAR_REPORT.getMessage());
     }
-
     @Test
     void testOtherMessage() {
         assertEquals("Alasan lain", RejectionMessage.OTHER.getMessage());
     }
-
     @Test
     void testEnumValues() {
         RejectionMessage[] values = RejectionMessage.values();
@@ -28,26 +22,22 @@ class RejectionMessageTest {
         assertEquals(RejectionMessage.SIMILAR_REPORT, values[1]);
         assertEquals(RejectionMessage.OTHER, values[2]);
     }
-
     @Test
     void testEnumValueOf() {
         assertEquals(RejectionMessage.INCOMPLETE_DETAIL, RejectionMessage.valueOf("INCOMPLETE_DETAIL"));
         assertEquals(RejectionMessage.SIMILAR_REPORT, RejectionMessage.valueOf("SIMILAR_REPORT"));
         assertEquals(RejectionMessage.OTHER, RejectionMessage.valueOf("OTHER"));
     }
-
     @Test
     void testEnumValueOfInvalid() {
         assertThrows(IllegalArgumentException.class, () -> RejectionMessage.valueOf("INVALID_VALUE"));
     }
-
     @Test
     void testMessageNotNull() {
         for (RejectionMessage message : RejectionMessage.values()) {
             assertNotNull(message.getMessage(), "Message should not be null for " + message.name());
         }
     }
-
     @Test
     void testMessageUniqueness() {
         String[] messages = new String[RejectionMessage.values().length];

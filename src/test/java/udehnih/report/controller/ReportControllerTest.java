@@ -1,5 +1,4 @@
 package udehnih.report.controller;
-
 import udehnih.report.model.Report;
 import udehnih.report.service.ReportService;
 import udehnih.report.service.CustomUserDetailsService;
@@ -9,16 +8,12 @@ import udehnih.report.enums.ReportStatus;
 import udehnih.report.config.TestConfig;
 import udehnih.report.exception.ReportNotFoundException;
 import udehnih.report.util.JwtUtil;
-
-
 import org.junit.jupiter.api.Test;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -26,63 +21,46 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
-
 @WebMvcTest(ReportController.class)
 @Import(TestConfig.class)
 @ActiveProfiles("test")
 public class ReportControllerTest {
-
     @Autowired
     private MockMvc mockMvc;
-    
     @Autowired
     private ReportService reportService;
-    
     @Autowired
     private JwtUtil jwtUtil;
-    
     @Autowired
     private CustomUserDetailsService customUserDetailsService;
-
     @Autowired
     private ObjectMapper objectMapper;
-
     @Test
     void getUserReports_WithValidStudentRole_ReturnsReports() throws Exception {
         String studentId = "12345";
         String email = "student@example.com";
         String role = "STUDENT";
         String token = "valid-token";
-        
-        // Set up JWT mock behavior
         when(jwtUtil.extractUsername(token)).thenReturn(email);
         when(jwtUtil.extractRole(token)).thenReturn(role);
-        
-        // Set up CustomUserDetailsService mock behavior
         when(customUserDetailsService.getUserIdByEmail(email)).thenReturn(java.util.Optional.of(studentId));
-        
-        // Set up ReportService mock behavior
         List<Report> reports = Arrays.asList(
             ReportFactory.createOpenReport(studentId, "Test Report 1", "Detail 1"),
             ReportFactory.createOpenReport(studentId, "Test Report 2", "Detail 2")
         );
         when(reportService.getUserReports(studentId))
             .thenReturn(CompletableFuture.completedFuture(reports));
-
         MvcResult mvcResult = mockMvc.perform(get("/api/reports")
                 .param("studentId", studentId)
                 .header("Authorization", "Bearer " + token))
                 .andExpect(request().asyncStarted())
                 .andReturn();
-
         mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
@@ -92,96 +70,67 @@ public class ReportControllerTest {
                 .andExpect(jsonPath("$[0].title").value("Test Report 1"))
                 .andExpect(jsonPath("$[1].title").value("Test Report 2"));
     }
-
     @Test
     void getUserReports_WithNonStudentRole_ReturnsBadRequest() throws Exception {
         String studentId = "12345";
         String email = "staff@example.com";
-        String role = "STAFF"; // Non-student role
+        String role = "STAFF"; 
         String token = "valid-token";
-        
-        // Set up JWT mock behavior
         when(jwtUtil.extractUsername(token)).thenReturn(email);
         when(jwtUtil.extractRole(token)).thenReturn(role);
-        
-        // Set up CustomUserDetailsService mock behavior
         when(customUserDetailsService.getUserIdByEmail(email)).thenReturn(java.util.Optional.of(studentId));
-        
         MvcResult mvcResult = mockMvc.perform(get("/api/reports")
                 .param("studentId", studentId)
                 .header("Authorization", "Bearer " + token))
                 .andExpect(request().asyncStarted())
                 .andReturn();
-
         mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isBadRequest());
     }
-
     @Test
     void getUserReports_WithMissingStudentId_ReturnsBadRequest() throws Exception {
         String email = "student@example.com";
         String role = "STUDENT";
         String token = "valid-token";
-        
-        // Set up JWT mock behavior
         when(jwtUtil.extractUsername(token)).thenReturn(email);
         when(jwtUtil.extractRole(token)).thenReturn(role);
-        
-        // Set up CustomUserDetailsService mock behavior - no studentId provided
         when(customUserDetailsService.getUserIdByEmail(email)).thenReturn(java.util.Optional.empty());
-        
         MvcResult mvcResult = mockMvc.perform(get("/api/reports")
                 .header("Authorization", "Bearer " + token))
                 .andExpect(request().asyncStarted())
                 .andReturn();
-
         mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isBadRequest());
     }
-
     @Test
     void getUserReports_WithEmptyStudentId_ReturnsBadRequest() throws Exception {
         String email = "student@example.com";
         String role = "STUDENT";
         String token = "valid-token";
-        
-        // Set up JWT mock behavior
         when(jwtUtil.extractUsername(token)).thenReturn(email);
         when(jwtUtil.extractRole(token)).thenReturn(role);
-        
-        // Set up CustomUserDetailsService mock behavior
         when(customUserDetailsService.getUserIdByEmail(email)).thenReturn(java.util.Optional.of(""));
-        
         MvcResult mvcResult = mockMvc.perform(get("/api/reports")
                 .param("studentId", "")
                 .header("Authorization", "Bearer " + token))
                 .andExpect(request().asyncStarted())
                 .andReturn();
-
         mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isBadRequest());
     }
-
     @Test
     void createReport_WithValidRequest_ReturnsCreated() throws Exception {
         String studentId = "12345";
         String email = "student@example.com";
         String token = "valid-token";
-        
         ReportRequestDto request = new ReportRequestDto();
         request.setStudentId(studentId);
         request.setTitle("Test Report");
         request.setDetail("Test Detail");
-
-        // Set up JWT mock behavior
         when(jwtUtil.extractUsername(token)).thenReturn(email);
-        
-        // Set up CustomUserDetailsService mock behavior
         when(customUserDetailsService.getUserIdByEmail(email)).thenReturn(java.util.Optional.of(studentId));
-        
         Report created = ReportFactory.createOpenReport(studentId, "Test Report", "Test Detail");
         when(reportService.createReport(any(Report.class))).thenReturn(created);
-
         mockMvc.perform(post("/api/reports")
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + token)
@@ -192,7 +141,6 @@ public class ReportControllerTest {
                 .andExpect(jsonPath("$.detail").value("Test Detail"))
                 .andExpect(jsonPath("$.status").value(ReportStatus.OPEN.name()));
     }
-
     @Test
     void updateReport_WithValidRequest_ReturnsOk() throws Exception {
         Integer reportId = 1;
@@ -200,10 +148,8 @@ public class ReportControllerTest {
         request.setStudentId("12345");
         request.setTitle("Updated Report");
         request.setDetail("Updated Detail");
-
         Report updated = ReportFactory.createOpenReport("12345", "Updated Report", "Updated Detail");
         when(reportService.updateReport(eq(reportId), any(Report.class))).thenReturn(updated);
-
         mockMvc.perform(put("/api/reports/{reportId}", reportId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
@@ -212,7 +158,6 @@ public class ReportControllerTest {
                 .andExpect(jsonPath("$.title").value("Updated Report"))
                 .andExpect(jsonPath("$.detail").value("Updated Detail"));
     }
-
     @Test
     void updateReport_WithNonExistentReport_ReturnsNotFound() throws Exception {
         Integer reportId = 999;
@@ -220,31 +165,25 @@ public class ReportControllerTest {
         request.setStudentId("12345");
         request.setTitle("Updated Report");
         request.setDetail("Updated Detail");
-
         when(reportService.updateReport(eq(reportId), any(Report.class)))
                 .thenThrow(new ReportNotFoundException("Report not found with id: " + reportId));
-
         mockMvc.perform(put("/api/reports/{reportId}", reportId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
     }
-
     @Test
     void deleteReport_WithValidId_ReturnsNoContent() throws Exception {
         Integer reportId = 1;
         doNothing().when(reportService).deleteReport(reportId);
-
         mockMvc.perform(delete("/api/reports/{reportId}", reportId))
                 .andExpect(status().isNoContent());
     }
-
     @Test
     void deleteReport_WithNonExistentReport_ReturnsNotFound() throws Exception {
         Integer reportId = 999;
         doThrow(new ReportNotFoundException("Report not found with id: " + reportId))
                 .when(reportService).deleteReport(reportId);
-
         mockMvc.perform(delete("/api/reports/{reportId}", reportId))
                 .andExpect(status().isNotFound());
     }
