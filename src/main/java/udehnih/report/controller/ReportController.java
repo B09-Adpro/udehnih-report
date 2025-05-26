@@ -30,6 +30,7 @@ import udehnih.report.service.ReportService;
 @RestController
 @RequestMapping("/api/reports")
 public class ReportController {
+    private static final String USER_INFO_NOT_FOUND_LOG = "Could not find user info for email: {}";
     private final ReportService reportService;
     @Autowired
     private AuthServiceClient authServiceClient;
@@ -56,7 +57,7 @@ public class ReportController {
         log.info("Creating report for user: {}", username);
         UserInfo userInfo = authServiceClient.getUserByEmail(username);
         if (userInfo == null || userInfo.getId() == null) {
-            log.warn("Could not find user info for email: {}", username);
+            log.warn(USER_INFO_NOT_FOUND_LOG, username);
             return ResponseEntity.status(404).build();
         }
         final String studentId = userInfo.getId().toString();
@@ -91,7 +92,7 @@ public class ReportController {
         log.info("Getting reports for authenticated user: {}", username);
         UserInfo userInfo = authServiceClient.getUserByEmail(username);
         if (userInfo == null) {
-            log.warn("Could not find user info for email: {}", username);
+            log.warn(USER_INFO_NOT_FOUND_LOG, username);
             return CompletableFuture.completedFuture(ResponseEntity.status(404).body(List.of()));
         }
         if (!userInfo.isStudent()) {
@@ -189,7 +190,7 @@ public class ReportController {
         log.info("Retrieving report with ID: {} for user: {}", reportId, username);
         UserInfo userInfo = authServiceClient.getUserByEmail(username);
         if (userInfo == null) {
-            log.warn("Could not find user info for email: {}", username);
+            log.warn(USER_INFO_NOT_FOUND_LOG, username);
             return CompletableFuture.completedFuture(ResponseEntity.status(404).build());
         }
         return reportService

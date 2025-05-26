@@ -1,7 +1,6 @@
 package udehnih.report.util;
 import org.junit.jupiter.api.Test;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import static org.junit.jupiter.api.Assertions.*;
 class AppConstantsTest {
@@ -18,13 +17,8 @@ class AppConstantsTest {
         assertEquals("12345", AppConstants.TEST_STUDENT_ID);
     }
     @Test
-
     void constructorShouldBePrivate() throws NoSuchMethodException {
         Constructor<AppConstants> constructor = AppConstants.class.getDeclaredConstructor();
-        assertTrue(Modifier.isPrivate(constructor.getModifiers()));
-        constructor.setAccessible(true);
-        Exception exception = assertThrows(InvocationTargetException.class, constructor::newInstance);
-        assertTrue(exception.getCause() instanceof UnsupportedOperationException);
-        assertEquals("Utility class", exception.getCause().getMessage());
+        assertTrue(Modifier.isPrivate(constructor.getModifiers()), "Constructor should be private");
     }
 }

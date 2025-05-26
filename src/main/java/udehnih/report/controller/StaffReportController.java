@@ -7,6 +7,7 @@ import udehnih.report.dto.ReportMapper;
 import udehnih.report.client.AuthServiceClient;
 import udehnih.report.model.UserInfo;
 import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -23,10 +24,11 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 @RestController
-
 @RequestMapping("/api/staff/reports")
 @PreAuthorize("hasRole('STAFF')")
+@Slf4j
 public class StaffReportController {
+    private static final String UNKNOWN_USER = "Unknown";
     private final ReportService reportService;
     @Autowired
     private AuthServiceClient authServiceClient;
@@ -42,53 +44,69 @@ public class StaffReportController {
                 ResponseEntity.status(401).body("Authentication required"));
         }
         return reportService.getAllReports()
-            .thenApply(reports -> {
-                List<String> studentIds = reports.stream()
-                    .map(Report::getStudentId)
-                    .distinct()
-                    .collect(Collectors.toList());
-                Map<String, String> studentNames = new HashMap<>();
-                if (!studentIds.isEmpty()) {
-                    for (String studentId : studentIds) {
-                        try {
-                            Long id;
-                            try {
-                                id = Long.parseLong(studentId);
-                            } catch (NumberFormatException e) {
-                                id = null;
-                            }
-                            UserInfo userInfo = null;
-                            if (id != null) {
-                                studentNames.put(studentId, "User " + id); 
-                            } else {
-                                if (studentId.contains("@")) {
-                                    userInfo = authServiceClient.getUserByEmail(studentId);
-                                    if (userInfo != null) {
-                                        studentNames.put(studentId, userInfo.getName());
-                                    } else {
-                                        studentNames.put(studentId, "Unknown");
-                                    }
-                                } else {
-                                    studentNames.put(studentId, "Unknown");
-                                }
-                            }
-                        } catch (Exception e) {
-                            System.out.println("Error fetching student name for ID " + studentId + ": " + e.getMessage());
-                            studentNames.put(studentId, "Unknown");
-                        }
-                    }
-                }
-                List<ReportResponseDto> reportDtos = reports.stream()
-                    .map(report -> {
-                        ReportResponseDto dto = ReportMapper.toDto(report);
-                        dto.setStudentName(studentNames.getOrDefault(report.getStudentId(), "Unknown"));
-                        return dto;
-                    })
-                    .collect(Collectors.toList());
-                return reportDtos;
-            })
+            .thenApply(this::mapReportsToResponseDtos)
             .thenApply(ResponseEntity::ok);
     }
+    
+    private List<ReportResponseDto> mapReportsToResponseDtos(List<Report> reports) {
+        Map<String, String> studentNames = fetchStudentNames(reports);
+        return reports.stream()
+            .map(report -> {
+                ReportResponseDto dto = ReportMapper.toDto(report);
+                dto.setStudentName(studentNames.getOrDefault(report.getStudentId(), UNKNOWN_USER));
+                return dto;
+            })
+            .collect(Collectors.toList());
+    }
+    
+    private Map<String, String> fetchStudentNames(List<Report> reports) {
+        List<String> studentIds = reports.stream()
+            .map(Report::getStudentId)
+            .distinct()
+            .collect(Collectors.toList());
+        
+        Map<String, String> studentNames = new HashMap<>();
+        if (!studentIds.isEmpty()) {
+            for (String studentId : studentIds) {
+                try {
+                    fetchAndStoreStudentName(studentId, studentNames);
+                } catch (Exception e) {
+                    log.error("Error fetching student name for ID {}: {}", studentId, e.getMessage());
+                    studentNames.put(studentId, UNKNOWN_USER);
+                }
+            }
+        }
+        return studentNames;
+    }
+
+    private void fetchAndStoreStudentName(String studentId, Map<String, String> studentNames) {
+        Long id = parseStudentId(studentId);
+        UserInfo userInfo = null;
+        
+        if (id != null) {
+            studentNames.put(studentId, "User " + id); 
+        } else {
+            if (studentId.contains("@")) {
+                userInfo = authServiceClient.getUserByEmail(studentId);
+                if (userInfo != null) {
+                    studentNames.put(studentId, userInfo.getName());
+                } else {
+                    studentNames.put(studentId, UNKNOWN_USER);
+                }
+            } else {
+                studentNames.put(studentId, UNKNOWN_USER);
+            }
+        }
+    }
+
+    private Long parseStudentId(String studentId) {
+        try {
+            return Long.parseLong(studentId);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+    
     @PutMapping("/{reportId}")
 
     public ResponseEntity<ReportResponseDto> processReport(
