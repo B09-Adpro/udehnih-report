@@ -34,20 +34,7 @@ public class AuthServiceClient {
                 return null;
             }
             try {
-                String userIdSql = "SELECT id FROM users WHERE email = ?";
-                Long userId = authJdbcTemplate.queryForObject(userIdSql, Long.class, username);
-                String userNameSql = "SELECT name FROM users WHERE email = ?";
-                String name = authJdbcTemplate.queryForObject(userNameSql, String.class, username);
-                List<String> roles = new ArrayList<>();
-                for (String r : role.split(",")) {
-                    roles.add(r.trim());
-                }
-                return UserInfo.builder()
-                    .id(userId)
-                    .email(username)
-                    .name(name)
-                    .roles(roles)
-                    .build();
+                return fetchUserDetails(username, role);
             } catch (Exception e) {
                 log.warn("Error retrieving additional user information: {}", e.getMessage());
                 return null;
@@ -56,6 +43,22 @@ public class AuthServiceClient {
             log.error("Error validating token: {}", e.getMessage());
             return null;
         }
+    }
+    private UserInfo fetchUserDetails(String username, String role) {
+        String userIdSql = "SELECT id FROM users WHERE email = ?";
+        Long userId = authJdbcTemplate.queryForObject(userIdSql, Long.class, username);
+        String userNameSql = "SELECT name FROM users WHERE email = ?";
+        String name = authJdbcTemplate.queryForObject(userNameSql, String.class, username);
+        List<String> roles = new ArrayList<>();
+        for (String r : role.split(",")) {
+            roles.add(r.trim());
+        }
+        return UserInfo.builder()
+            .id(userId)
+            .email(username)
+            .name(name)
+            .roles(roles)
+            .build();
     }
 
     public UserInfo getUserByEmail(String email) {

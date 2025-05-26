@@ -111,8 +111,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private void setAuthenticationHeaders(HttpServletResponse response, String username, String role, String jwt) {
         response.setHeader("X-Auth-Status", "authenticated");
-        response.setHeader("X-Auth-Username", username);
-        response.setHeader("X-Auth-Role", role.replace(AppConstants.ROLE_PREFIX, ""));
+        response.setHeader("X-Auth-Username", sanitizeHeaderValue(username));
+        response.setHeader("X-Auth-Role", sanitizeHeaderValue(role.replace(AppConstants.ROLE_PREFIX, "")));
         response.setHeader(AppConstants.AUTHORIZATION_HEADER, AppConstants.BEARER_PREFIX + jwt);
         response.setHeader("X-Auth-Token", jwt);
         response.setHeader("Access-Control-Expose-Headers", 
@@ -124,7 +124,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             UserInfo userInfo = authServiceClient.getUserByEmail(username);
             if (userInfo != null && userInfo.getId() != null) {
-                response.setHeader("X-User-Id", userInfo.getId().toString());
+                response.setHeader("X-User-Id", sanitizeHeaderValue(userInfo.getId().toString()));
             }
         } catch (Exception e) {
             log.warn("Could not retrieve user ID: {}", e.getMessage());
@@ -154,7 +154,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             UserInfo userInfo = authServiceClient.getUserByEmail(username);
             if (userInfo != null && userInfo.getName() != null) {
-                response.setHeader("X-Auth-Name", userInfo.getName());
+                response.setHeader("X-Auth-Name", sanitizeHeaderValue(userInfo.getName()));
             }
         } catch (Exception e) {
             log.warn("Could not retrieve user name: {}", e.getMessage());
@@ -165,9 +165,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         log.error("Authentication error", e);
         SecurityContextHolder.clearContext();
         response.setHeader("X-Auth-Status", "unauthenticated");
-        response.setHeader("X-Auth-Error", e.getMessage());
+        response.setHeader("X-Auth-Error", sanitizeHeaderValue(e.getMessage()));
     }
 
+    /**
+     * Sanitizes a value to be used in HTTP headers to prevent HTTP Response Splitting attacks
+     * @param value the value to sanitize
+     * @return the sanitized value
+     */
+    private String sanitizeHeaderValue(String value) {
+        if (value == null) {
+            return "";
+        }
+        // Remove CR and LF characters to prevent HTTP Response Splitting
+        return value.replaceAll("[\r\n]", "");
+    }
+    
     private void logAuthenticationState() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null) {
