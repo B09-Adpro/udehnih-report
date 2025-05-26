@@ -29,3 +29,22 @@ jobs:
         run: chmod +x gradlew
       - name: Run unit tests
         run: ./gradlew test
+        env:
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          AUTH_DB_URL: ${{ secrets.AUTH_DB_URL }}
+          AUTH_DB_USERNAME: ${{ secrets.AUTH_DB_USERNAME }}
+          AUTH_DB_PASSWORD: ${{ secrets.AUTH_DB_PASSWORD }}
+          AUTH_SERVICE_URL: ${{ secrets.AUTH_SERVICE_URL }}
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+          JWT_EXPIRATION: ${{ secrets.JWT_EXPIRATION }}
+          ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
+          ALLOWED_METHODS: ${{ secrets.ALLOWED_METHODS }}
+          ALLOWED_HEADERS: ${{ secrets.ALLOWED_HEADERS }}
+          EXPOSED_HEADERS: ${{ secrets.EXPOSED_HEADERS }}
+          ALLOWED_CREDENTIALS: ${{ secrets.ALLOWED_CREDENTIALS }}
+          SHOW_SQL: false
+          LOG_SECURITY_LEVEL: INFO
+          LOG_SQL_LEVEL: INFO
+          LOG_SQL_PARAMS_LEVEL: INFO
