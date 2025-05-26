@@ -106,8 +106,12 @@ public class ReportController {
         }
         if (isBlank(effectiveStudentId)) {
             log.info("No studentId provided in request, using authenticated user ID");
-            effectiveStudentId = userInfo.getId().toString();
-            log.info("Using authenticated user ID: {} for email: {}", effectiveStudentId, username);
+            if (userInfo.getId() != null) {
+                effectiveStudentId = userInfo.getId().toString();
+                log.info("Using authenticated user ID: {} for email: {}", effectiveStudentId, username);
+            } else {
+                log.warn("User ID is null for email: {}", username);
+            }
         }
         if (isBlank(effectiveStudentId)) {
             log.warn("Empty or blank studentId provided");
@@ -191,6 +195,11 @@ public class ReportController {
         return reportService
             .getReportById(reportId)
             .thenApply(report -> {
+                if (userInfo.getId() == null) {
+                    log.warn("User ID is null for email: {}", username);
+                    return ResponseEntity.status(400).<ReportResponseDto>build();
+                }
+                
                 String userId = userInfo.getId().toString();
                 if (!userInfo.isStaff() && !report.getStudentId().equals(userId)) {
                     log.warn(
@@ -210,7 +219,7 @@ public class ReportController {
     }
     private
 
- static boolean isBlank(final String str) {
+    static boolean isBlank(final String str) {
         return str == null || str.trim().isEmpty();
     }
 }
