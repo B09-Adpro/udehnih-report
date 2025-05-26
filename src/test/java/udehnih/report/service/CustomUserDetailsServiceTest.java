@@ -1,169 +1,143 @@
 package udehnih.report.service;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import udehnih.report.util.AppConstants;
+
+import udehnih.report.client.AuthServiceClient;
+import udehnih.report.model.UserInfo;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+
 class CustomUserDetailsServiceTest {
     @Mock
-    private JdbcTemplate authJdbcTemplate;
+    private AuthServiceClient authServiceClient;
+
     @InjectMocks
     private CustomUserDetailsService userDetailsService;
+
     private final String testEmail = "test@example.com";
-    private final String testPassword = "hashedPassword";
+
     private final String testName = "Test User";
     private final Long testId = 1L;
-    @BeforeEach
 
+    @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
     }
-    @Test
 
+    @Test
     void loadUserByUsernameShouldReturnUserDetailsWhenUserExists() {
-        Map<String, Object> userData = new HashMap<>();
-        userData.put("id", testId);
-        userData.put("email", testEmail);
-        userData.put("password", testPassword);
-        userData.put("name", testName);
-        when(authJdbcTemplate.queryForMap(anyString(), eq(testEmail.trim()))).thenReturn(userData);
-        List<String> roles = Collections.singletonList("STUDENT");
-        when(authJdbcTemplate.queryForList(anyString(), eq(String.class), eq(testId)))
-                .thenReturn(roles);
+        UserInfo userInfo = UserInfo.builder()
+            .id(testId)
+            .email(testEmail)
+            .name(testName)
+            .roles(Collections.singletonList("STUDENT"))
+            .build();
+        
+        when(authServiceClient.getUserByEmail(testEmail)).thenReturn(userInfo);
+        
         UserDetails userDetails = userDetailsService.loadUserByUsername(testEmail);
+        
         assertNotNull(userDetails);
         assertEquals(testEmail, userDetails.getUsername());
-        assertEquals(testPassword, userDetails.getPassword());
         assertTrue(userDetails.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_STUDENT")));
-        verify(authJdbcTemplate).queryForMap(anyString(), eq(testEmail.trim()));
-        verify(authJdbcTemplate).queryForList(anyString(), eq(String.class), eq(testId));
+        verify(authServiceClient).getUserByEmail(testEmail);
     }
-    @Test
 
+    @Test
     void loadUserByUsernameShouldHandleMultipleRoles() {
-        Map<String, Object> userData = new HashMap<>();
-        userData.put("id", testId);
-        userData.put("email", testEmail);
-        userData.put("password", testPassword);
-        userData.put("name", testName);
-        when(authJdbcTemplate.queryForMap(anyString(), eq(testEmail.trim()))).thenReturn(userData);
-        List<String> roles = Arrays.asList("STUDENT", "STAFF", "TUTOR");
-        when(authJdbcTemplate.queryForList(anyString(), eq(String.class), eq(testId)))
-                .thenReturn(roles);
+        UserInfo userInfo = UserInfo.builder()
+            .id(testId)
+            .email(testEmail)
+            .name(testName)
+            .roles(Arrays.asList("STUDENT", "STAFF", "TUTOR"))
+            .build();
+        
+        when(authServiceClient.getUserByEmail(testEmail)).thenReturn(userInfo);
+        
         UserDetails userDetails = userDetailsService.loadUserByUsername(testEmail);
+        
         assertNotNull(userDetails);
         assertEquals(testEmail, userDetails.getUsername());
-        assertEquals(testPassword, userDetails.getPassword());
         Collection<? extends GrantedAuthority> authorities = userDetails.getAuthorities();
         assertEquals(3, authorities.size());
         assertTrue(authorities.contains(new SimpleGrantedAuthority("ROLE_STUDENT")));
         assertTrue(authorities.contains(new SimpleGrantedAuthority("ROLE_STAFF")));
         assertTrue(authorities.contains(new SimpleGrantedAuthority("ROLE_TUTOR")));
-        verify(authJdbcTemplate).queryForMap(anyString(), eq(testEmail.trim()));
-        verify(authJdbcTemplate).queryForList(anyString(), eq(String.class), eq(testId));
     }
-    @Test
 
-    void loadUserByUsernameShouldUseDefaultRoleWhenRoleNotFound() {
-        Map<String, Object> userData = new HashMap<>();
-        userData.put("id", testId);
-        userData.put("email", testEmail);
-        userData.put("password", testPassword);
-        userData.put("name", testName);
-        when(authJdbcTemplate.queryForMap(anyString(), eq(testEmail.trim()))).thenReturn(userData);
-        when(authJdbcTemplate.queryForList(anyString(), eq(String.class), eq(testId)))
-                .thenReturn(Collections.emptyList());
-        UserDetails userDetails = userDetailsService.loadUserByUsername(testEmail);
-        assertNotNull(userDetails);
-        assertEquals(testEmail, userDetails.getUsername());
-        assertEquals(testPassword, userDetails.getPassword());
-        assertTrue(userDetails.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_STUDENT")));
-        assertEquals(1, userDetails.getAuthorities().size());
-    }
     @Test
-
     void loadUserByUsernameShouldThrowExceptionWhenUserNotFound() {
-        when(authJdbcTemplate.queryForMap(anyString(), eq(testEmail.trim())))
-                .thenThrow(new EmptyResultDataAccessException(1));
+        when(authServiceClient.getUserByEmail(testEmail)).thenReturn(null);
+        
         assertThrows(UsernameNotFoundException.class, () -> userDetailsService.loadUserByUsername(testEmail));
     }
-    @Test
 
+    @Test
     void getUserIdByEmailShouldReturnUserIdWhenUserExists() {
-        when(authJdbcTemplate.queryForObject(anyString(), eq(String.class), eq(testEmail)))
-                .thenReturn(testId.toString());
+        UserInfo userInfo = UserInfo.builder()
+            .id(testId)
+            .email(testEmail)
+            .name(testName)
+            .roles(Collections.singletonList("STUDENT"))
+            .build();
+        
+        when(authServiceClient.getUserByEmail(testEmail)).thenReturn(userInfo);
+        
         Optional<String> result = userDetailsService.getUserIdByEmail(testEmail);
+        
         assertTrue(result.isPresent());
         assertEquals(testId.toString(), result.get());
     }
-    @Test
 
+    @Test
     void getUserIdByEmailShouldReturnEmptyOptionalWhenUserNotFound() {
-        when(authJdbcTemplate.queryForObject(anyString(), eq(String.class), eq(testEmail)))
-                .thenThrow(new EmptyResultDataAccessException(1));
+        when(authServiceClient.getUserByEmail(testEmail)).thenReturn(null);
+
         Optional<String> result = userDetailsService.getUserIdByEmail(testEmail);
+
         assertFalse(result.isPresent());
     }
-    @Test
 
+    @Test
     void getUserInfoByEmailShouldReturnUserInfoWhenUserExists() {
-        Map<String, Object> userData = new HashMap<>();
-        userData.put("id", testId);
-        userData.put("email", testEmail);
-        userData.put("name", testName);
-        when(authJdbcTemplate.queryForMap(anyString(), eq(testEmail))).thenReturn(userData);
-        when(authJdbcTemplate.queryForObject(anyString(), eq(String.class), eq(testId)))
-                .thenReturn("STUDENT");
-        Optional<Map<String, Object>> result = userDetailsService.getUserInfoByEmail(testEmail);
-        assertTrue(result.isPresent());
-        Map<String, Object> userInfo = result.get();
-        assertEquals(testId, userInfo.get("id"));
-        assertEquals(testEmail, userInfo.get("email"));
-        assertEquals(testName, userInfo.get("name"));
-        assertEquals("STUDENT", userInfo.get("role"));
+        UserInfo userInfo = UserInfo.builder()
+            .id(testId)
+            .email(testEmail)
+            .name(testName)
+            .roles(Collections.singletonList("STUDENT"))
+            .build();
+        
+        when(authServiceClient.getUserByEmail(testEmail)).thenReturn(userInfo);
+        
+        UserInfo result = userDetailsService.getUserInfoByEmail(testEmail);
+        
+        assertNotNull(result);
+        assertEquals(testId, result.getId());
+        assertEquals(testEmail, result.getEmail());
+        assertEquals(testName, result.getName());
+        assertTrue(result.getRoles().contains("STUDENT"));
     }
-    @Test
 
-    void getUserInfoByEmailShouldUseDefaultRoleWhenRoleNotFound() {
-        Map<String, Object> userData = new HashMap<>();
-        userData.put("id", testId);
-        userData.put("email", testEmail);
-        userData.put("name", testName);
-        when(authJdbcTemplate.queryForMap(anyString(), eq(testEmail))).thenReturn(userData);
-        when(authJdbcTemplate.queryForObject(anyString(), eq(String.class), eq(testId)))
-                .thenThrow(new EmptyResultDataAccessException(1));
-        Optional<Map<String, Object>> result = userDetailsService.getUserInfoByEmail(testEmail);
-        assertTrue(result.isPresent());
-        Map<String, Object> userInfo = result.get();
-        assertEquals(testId, userInfo.get("id"));
-        assertEquals(testEmail, userInfo.get("email"));
-        assertEquals(testName, userInfo.get("name"));
-        assertEquals(AppConstants.STUDENT_ROLE, userInfo.get("role"));
-    }
     @Test
-
-    void getUserInfoByEmailShouldReturnEmptyOptionalWhenUserNotFound() {
-        when(authJdbcTemplate.queryForMap(anyString(), eq(testEmail)))
-                .thenThrow(new EmptyResultDataAccessException(1));
-        Optional<Map<String, Object>> result = userDetailsService.getUserInfoByEmail(testEmail);
-        assertFalse(result.isPresent());
+    void getUserInfoByEmailShouldReturnNullWhenUserNotFound() {
+        when(authServiceClient.getUserByEmail(testEmail)).thenReturn(null);
+        
+        UserInfo result = userDetailsService.getUserInfoByEmail(testEmail);
+        
+        assertNull(result);
     }
 }

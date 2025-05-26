@@ -7,10 +7,12 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
+import udehnih.report.client.AuthServiceClient;
+import udehnih.report.model.UserInfo;
 import udehnih.report.util.AppConstants;
 import udehnih.report.util.JwtUtil;
+import java.util.Collections;
 import java.util.Enumeration;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -19,7 +21,7 @@ class JwtAuthenticationFilterTest {
     @Mock
     private JwtUtil jwtUtil;
     @Mock
-    private JdbcTemplate authJdbcTemplate;
+    private AuthServiceClient authServiceClient;
     @Mock
     private HttpServletRequest request;
     @Mock
@@ -44,17 +46,22 @@ class JwtAuthenticationFilterTest {
         when(request.getHeaderNames()).thenReturn(headerNames);
         when(headerNames.hasMoreElements()).thenReturn(false);
     }
+    
     @Test
-
     void doFilterInternalShouldAuthenticateUserWhenValidTokenIsProvided() throws Exception {
         when(request.getHeader(AppConstants.AUTHORIZATION_HEADER)).thenReturn(testAuthHeader);
         when(jwtUtil.extractUsername(testToken)).thenReturn(testEmail);
         when(jwtUtil.extractRole(testToken)).thenReturn(AppConstants.ROLE_PREFIX + testRole);
         when(jwtUtil.validateToken(eq(testToken), any())).thenReturn(true);
-        when(authJdbcTemplate.queryForObject(anyString(), eq(Long.class), eq(testEmail)))
-                .thenReturn(1L);
-        when(authJdbcTemplate.queryForObject(anyString(), eq(String.class), eq(testEmail)))
-                .thenReturn("Test User");
+        
+        UserInfo userInfo = UserInfo.builder()
+            .id(1L)
+            .email(testEmail)
+            .name("Test User")
+            .roles(Collections.singletonList(testRole))
+            .build();
+            
+        when(authServiceClient.getUserByEmail(testEmail)).thenReturn(userInfo);
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
         verify(request, atLeastOnce()).getHeader(AppConstants.AUTHORIZATION_HEADER);
         verify(jwtUtil, atLeastOnce()).extractUsername(testToken);
@@ -68,8 +75,8 @@ class JwtAuthenticationFilterTest {
         verify(request, atLeastOnce()).setAttribute(eq("X-User-Role"), eq(testRole));
         verify(filterChain).doFilter(request, response);
     }
-    @Test
 
+    @Test
     void doFilterInternalShouldContinueFilterChainWhenNoTokenIsProvided() throws Exception {
         when(request.getHeader(AppConstants.AUTHORIZATION_HEADER)).thenReturn(null);
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
@@ -79,8 +86,8 @@ class JwtAuthenticationFilterTest {
         verify(jwtUtil, never()).validateToken(anyString(), any());
         verify(filterChain).doFilter(request, response);
     }
-    @Test
 
+    @Test
     void doFilterInternalShouldContinueFilterChainWhenInvalidTokenFormatIsProvided() throws Exception {
         when(request.getHeader(AppConstants.AUTHORIZATION_HEADER)).thenReturn("InvalidToken");
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
@@ -90,8 +97,8 @@ class JwtAuthenticationFilterTest {
         verify(jwtUtil, never()).validateToken(anyString(), any());
         verify(filterChain).doFilter(request, response);
     }
-    @Test
 
+    @Test
     void doFilterInternalShouldHandleNullUsernameWhenExtractedFromToken() throws Exception {
         when(request.getHeader(AppConstants.AUTHORIZATION_HEADER)).thenReturn(testAuthHeader);
         when(jwtUtil.extractUsername(testToken)).thenReturn(null);
@@ -103,8 +110,8 @@ class JwtAuthenticationFilterTest {
         verify(jwtUtil, never()).validateToken(anyString(), any());
         verify(filterChain).doFilter(request, response);
     }
-    @Test
 
+    @Test
     void doFilterInternalShouldHandleInvalidTokenWhenValidationFails() throws Exception {
         when(request.getHeader(AppConstants.AUTHORIZATION_HEADER)).thenReturn(testAuthHeader);
         when(jwtUtil.extractUsername(testToken)).thenReturn(testEmail);
@@ -137,10 +144,10 @@ class JwtAuthenticationFilterTest {
         when(jwtUtil.extractUsername(testToken)).thenReturn(testEmail);
         when(jwtUtil.extractRole(testToken)).thenReturn(AppConstants.ROLE_PREFIX + testRole);
         when(jwtUtil.validateToken(eq(testToken), any())).thenReturn(true);
-        when(authJdbcTemplate.queryForObject(anyString(), eq(Long.class), eq(testEmail)))
+        when(authServiceClient.getUserByEmail(testEmail))
                 .thenThrow(new RuntimeException("Database error"));
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
-        verify(authJdbcTemplate, atLeastOnce()).queryForObject(anyString(), eq(Long.class), eq(testEmail));
+        verify(authServiceClient, atLeastOnce()).getUserByEmail(testEmail);
         verify(filterChain).doFilter(request, response);
     }
     @Test
@@ -150,12 +157,19 @@ class JwtAuthenticationFilterTest {
         when(jwtUtil.extractUsername(testToken)).thenReturn(testEmail);
         when(jwtUtil.extractRole(testToken)).thenReturn(AppConstants.ROLE_PREFIX + testRole);
         when(jwtUtil.validateToken(eq(testToken), any())).thenReturn(true);
-        when(authJdbcTemplate.queryForObject(anyString(), eq(Long.class), eq(testEmail)))
-                .thenReturn(1L);
-        when(authJdbcTemplate.queryForObject(anyString(), eq(String.class), eq(testEmail)))
-                .thenThrow(new RuntimeException("Database error"));
+        
+        UserInfo userInfo = UserInfo.builder()
+            .id(1L)
+            .email(testEmail)
+            .name(null) // Simulate missing name
+            .roles(Collections.singletonList(testRole))
+            .build();
+            
+        when(authServiceClient.getUserByEmail(testEmail)).thenReturn(userInfo);
+        
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
-        verify(authJdbcTemplate, atLeastOnce()).queryForObject(anyString(), eq(String.class), eq(testEmail));
+        
+        verify(authServiceClient, atLeastOnce()).getUserByEmail(testEmail);
         verify(response, atLeastOnce()).setHeader(eq("X-User-Id"), eq("1"));
         verify(response, never()).setHeader(eq("X-Auth-Name"), anyString());
         verify(filterChain).doFilter(request, response);

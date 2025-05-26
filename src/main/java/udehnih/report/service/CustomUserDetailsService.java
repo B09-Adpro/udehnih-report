@@ -7,9 +7,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import udehnih.report.client.AuthServiceClient;
@@ -70,36 +68,12 @@ public class CustomUserDetailsService implements UserDetailsService {
             return Optional.empty();
         }
     }
-    public Optional<Map<String, Object>> getUserInfoByEmail(String email) {
+    public UserInfo getUserInfoByEmail(String email) {
         try {
-            UserInfo userInfo = authServiceClient.getUserByEmail(email);
-            if (userInfo == null) {
-                return Optional.empty();
-            }
-            Map<String, Object> userInfoMap = new HashMap<>();
-            userInfoMap.put("id", userInfo.getId());
-            userInfoMap.put("email", userInfo.getEmail());
-            userInfoMap.put("name", userInfo.getName());
-            if (userInfo.getRoles() != null && !userInfo.getRoles().isEmpty()) {
-                userInfoMap.put("role", userInfo.getRoles().get(0));
-                StringBuilder allRoles = new StringBuilder();
-                for (String role : userInfo.getRoles()) {
-                    if (allRoles.length() > 0) {
-                        allRoles.append(",");
-                    }
-                    allRoles.append(role);
-                }
-                userInfoMap.put("allRoles", allRoles.toString());
-                log.info("Set all roles for user {}: {}", email, allRoles.toString());
-            } else {
-                userInfoMap.put("role", AppConstants.STUDENT_ROLE);
-                userInfoMap.put("allRoles", AppConstants.STUDENT_ROLE);
-                log.warn("No roles found for user {}, using default: {}", email, AppConstants.STUDENT_ROLE);
-            }
-            return Optional.of(userInfoMap);
+            return authServiceClient.getUserByEmail(email);
         } catch (Exception e) {
             log.error("Error getting user info for {}: {}", email, e.getMessage());
-            return Optional.empty();
+            return null;
         }
     }
 }

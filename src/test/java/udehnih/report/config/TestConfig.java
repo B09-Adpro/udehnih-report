@@ -10,9 +10,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import udehnih.report.client.AuthServiceClient;
 import udehnih.report.service.CustomUserDetailsService;
 import udehnih.report.service.ReportService;
 import udehnih.report.util.JwtUtil;
+
 @TestConfiguration
 public class TestConfig implements WebMvcConfigurer {
     @Override
@@ -73,8 +76,13 @@ public class TestConfig implements WebMvcConfigurer {
     public CustomUserDetailsService customUserDetailsService() {
         return Mockito.mock(CustomUserDetailsService.class);
     }
-    @Bean
 
+    @Bean
+    public AuthServiceClient authServiceClient() {
+        return Mockito.mock(AuthServiceClient.class);
+    }
+
+    @Bean
     public ReportService reportService() {
         return Mockito.mock(ReportService.class);
     }
