@@ -1,9 +1,12 @@
 package udehnih.report.dto;
 import udehnih.report.model.Report;
 public final class ReportMapper {
+
     private ReportMapper() {
     }
-    public static Report toEntity(final ReportRequestDto dto) {
+    public
+
+ static Report toEntity(final ReportRequestDto dto) {
         Report result = null;
         if (dto == null) {
             return result;
@@ -15,7 +18,9 @@ public final class ReportMapper {
                 .build();
         return result;
     }
-    public static ReportResponseDto toDto(final Report report) {
+    public
+
+ static ReportResponseDto toDto(final Report report) {
         ReportResponseDto result = null;
         if (report == null) {
             return result;

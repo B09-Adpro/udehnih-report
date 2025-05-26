@@ -32,11 +32,13 @@ class CustomUserDetailsServiceTest {
     private final String testName = "Test User";
     private final Long testId = 1L;
     @BeforeEach
+
     void setUp() {
         MockitoAnnotations.openMocks(this);
     }
     @Test
-    void loadUserByUsername_ShouldReturnUserDetails_WhenUserExists() {
+
+    void loadUserByUsernameShouldReturnUserDetailsWhenUserExists() {
         Map<String, Object> userData = new HashMap<>();
         userData.put("id", testId);
         userData.put("email", testEmail);
@@ -55,7 +57,8 @@ class CustomUserDetailsServiceTest {
         verify(authJdbcTemplate).queryForList(anyString(), eq(String.class), eq(testId));
     }
     @Test
-    void loadUserByUsername_ShouldHandleMultipleRoles() {
+
+    void loadUserByUsernameShouldHandleMultipleRoles() {
         Map<String, Object> userData = new HashMap<>();
         userData.put("id", testId);
         userData.put("email", testEmail);
@@ -78,7 +81,8 @@ class CustomUserDetailsServiceTest {
         verify(authJdbcTemplate).queryForList(anyString(), eq(String.class), eq(testId));
     }
     @Test
-    void loadUserByUsername_ShouldUseDefaultRole_WhenRoleNotFound() {
+
+    void loadUserByUsernameShouldUseDefaultRoleWhenRoleNotFound() {
         Map<String, Object> userData = new HashMap<>();
         userData.put("id", testId);
         userData.put("email", testEmail);
@@ -95,13 +99,15 @@ class CustomUserDetailsServiceTest {
         assertEquals(1, userDetails.getAuthorities().size());
     }
     @Test
-    void loadUserByUsername_ShouldThrowException_WhenUserNotFound() {
+
+    void loadUserByUsernameShouldThrowExceptionWhenUserNotFound() {
         when(authJdbcTemplate.queryForMap(anyString(), eq(testEmail.trim())))
                 .thenThrow(new EmptyResultDataAccessException(1));
         assertThrows(UsernameNotFoundException.class, () -> userDetailsService.loadUserByUsername(testEmail));
     }
     @Test
-    void getUserIdByEmail_ShouldReturnUserId_WhenUserExists() {
+
+    void getUserIdByEmailShouldReturnUserIdWhenUserExists() {
         when(authJdbcTemplate.queryForObject(anyString(), eq(String.class), eq(testEmail)))
                 .thenReturn(testId.toString());
         Optional<String> result = userDetailsService.getUserIdByEmail(testEmail);
@@ -109,14 +115,16 @@ class CustomUserDetailsServiceTest {
         assertEquals(testId.toString(), result.get());
     }
     @Test
-    void getUserIdByEmail_ShouldReturnEmptyOptional_WhenUserNotFound() {
+
+    void getUserIdByEmailShouldReturnEmptyOptionalWhenUserNotFound() {
         when(authJdbcTemplate.queryForObject(anyString(), eq(String.class), eq(testEmail)))
                 .thenThrow(new EmptyResultDataAccessException(1));
         Optional<String> result = userDetailsService.getUserIdByEmail(testEmail);
         assertFalse(result.isPresent());
     }
     @Test
-    void getUserInfoByEmail_ShouldReturnUserInfo_WhenUserExists() {
+
+    void getUserInfoByEmailShouldReturnUserInfoWhenUserExists() {
         Map<String, Object> userData = new HashMap<>();
         userData.put("id", testId);
         userData.put("email", testEmail);
@@ -133,7 +141,8 @@ class CustomUserDetailsServiceTest {
         assertEquals("STUDENT", userInfo.get("role"));
     }
     @Test
-    void getUserInfoByEmail_ShouldUseDefaultRole_WhenRoleNotFound() {
+
+    void getUserInfoByEmailShouldUseDefaultRoleWhenRoleNotFound() {
         Map<String, Object> userData = new HashMap<>();
         userData.put("id", testId);
         userData.put("email", testEmail);
@@ -150,7 +159,8 @@ class CustomUserDetailsServiceTest {
         assertEquals(AppConstants.STUDENT_ROLE, userInfo.get("role"));
     }
     @Test
-    void getUserInfoByEmail_ShouldReturnEmptyOptional_WhenUserNotFound() {
+
+    void getUserInfoByEmailShouldReturnEmptyOptionalWhenUserNotFound() {
         when(authJdbcTemplate.queryForMap(anyString(), eq(testEmail)))
                 .thenThrow(new EmptyResultDataAccessException(1));
         Optional<Map<String, Object>> result = userDetailsService.getUserInfoByEmail(testEmail);

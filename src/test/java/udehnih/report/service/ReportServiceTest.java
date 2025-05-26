@@ -25,11 +25,13 @@ public class ReportServiceTest {
     @InjectMocks
     private ReportServiceImpl reportService;
     @BeforeEach
+
     void setUp() {
         MockitoAnnotations.openMocks(this);
     }
     @Test
-    void createReport_ShouldCreateOpenReport() {
+
+    void createReportShouldCreateOpenReport() {
         Report inputReport = Report.builder()
                 .studentId("12345")
                 .title("Test Report")
@@ -48,7 +50,8 @@ public class ReportServiceTest {
         verify(reportRepository).save(any(Report.class));
     }
     @Test
-    void getUserReports_ShouldReturnUserReports() throws ExecutionException, InterruptedException {
+
+    void getUserReportsShouldReturnUserReports() throws ExecutionException, InterruptedException {
         String studentId = "12345";
         List<Report> expectedReports = Arrays.asList(
             ReportFactory.createOpenReport(studentId, "Report 1", "Detail 1"),
@@ -63,7 +66,8 @@ public class ReportServiceTest {
         verify(reportRepository).findByStudentId(studentId);
     }
     @Test
-    void updateReport_WithValidReport_ShouldUpdateSuccessfully() {
+
+    void updateReportWithValidReportShouldUpdateSuccessfully() {
         Integer reportId = 1;
         Report existingReport = ReportFactory.createOpenReport("12345", "Old Title", "Old Detail");
         Report updatedReport = ReportFactory.createOpenReport("12345", "New Title", "New Detail");
@@ -76,7 +80,8 @@ public class ReportServiceTest {
         verify(reportRepository).save(any(Report.class));
     }
     @Test
-    void updateReport_WithNonExistentReport_ShouldThrowException() {
+
+    void updateReportWithNonExistentReportShouldThrowException() {
         Integer reportId = 999;
         Report updatedReport = ReportFactory.createOpenReport("12345", "New Title", "New Detail");
         when(reportRepository.findById(reportId)).thenReturn(Optional.empty());
@@ -86,7 +91,8 @@ public class ReportServiceTest {
         assertEquals("Report not found with id: " + reportId, exception.getMessage());
     }
     @Test
-    void processReport_WithValidRejection_ShouldRejectReport() {
+
+    void processReportWithValidRejectionShouldRejectReport() {
         Integer reportId = 1;
         Report existingReport = ReportFactory.createOpenReport("12345", "Test", "Detail");
         RejectionRequestDto rejectionRequest = new RejectionRequestDto();
@@ -99,7 +105,8 @@ public class ReportServiceTest {
         verify(reportRepository, times(2)).save(any(Report.class));
     }
     @Test
-    void processReport_WithNoRejection_ShouldResolveReport() {
+
+    void processReportWithNoRejectionShouldResolveReport() {
         Integer reportId = 1;
         Report existingReport = ReportFactory.createOpenReport("12345", "Test", "Detail");
         when(reportRepository.findById(reportId)).thenReturn(Optional.of(existingReport));
@@ -110,7 +117,8 @@ public class ReportServiceTest {
         verify(reportRepository).save(any(Report.class));
     }
     @Test
-    void processReport_WithNonExistentReport_ShouldThrowException() {
+
+    void processReportWithNonExistentReportShouldThrowException() {
         Integer reportId = 999;
         when(reportRepository.findById(reportId)).thenReturn(Optional.empty());
         Exception exception = assertThrows(ReportNotFoundException.class, () -> {
@@ -119,7 +127,8 @@ public class ReportServiceTest {
         assertEquals("Report not found with id: " + reportId, exception.getMessage());
     }
     @Test
-    void processReport_WithNonOpenReport_ShouldThrowException() {
+
+    void processReportWithNonOpenReportShouldThrowException() {
         Integer reportId = 1;
         Report existingReport = Report.builder()
                 .reportId(reportId)
@@ -135,7 +144,8 @@ public class ReportServiceTest {
         assertEquals("Report cannot be processed because it is not in OPEN status", exception.getMessage());
     }
     @Test
-    void processReport_WithEmptyRejectionMessage_ShouldResolveReport() {
+
+    void processReportWithEmptyRejectionMessageShouldResolveReport() {
         Integer reportId = 1;
         Report existingReport = ReportFactory.createOpenReport("12345", "Test", "Detail");
         RejectionRequestDto rejectionRequest = new RejectionRequestDto();
@@ -147,14 +157,16 @@ public class ReportServiceTest {
         verify(reportRepository).save(any(Report.class));
     }
     @Test
-    void deleteReport_ShouldCallRepositoryDelete() {
+
+    void deleteReportShouldCallRepositoryDelete() {
         Integer reportId = 1;
         doNothing().when(reportRepository).deleteById(reportId);
         reportService.deleteReport(reportId);
         verify(reportRepository).deleteById(reportId);
     }
     @Test
-    void getAllReports_ShouldReturnAllReports() throws ExecutionException, InterruptedException {
+
+    void getAllReportsShouldReturnAllReports() throws ExecutionException, InterruptedException {
         List<Report> expectedReports = Arrays.asList(
             ReportFactory.createOpenReport("12345", "Report 1", "Detail 1"),
             ReportFactory.createOpenReport("67890", "Report 2", "Detail 2")

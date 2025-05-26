@@ -9,11 +9,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.task.DelegatingSecurityContextAsyncTaskExecutor;
 import org.springframework.test.context.ActiveProfiles;
 @SpringBootTest
+
 @ActiveProfiles("test")
 class AsyncConfigTest {
     @Autowired
     private AsyncConfig asyncConfig;
     @Test
+
     void taskExecutorShouldHaveCorrectConfiguration() {
         Executor executor = asyncConfig.taskExecutor();
         assertTrue(executor instanceof DelegatingSecurityContextAsyncTaskExecutor);
@@ -45,9 +47,11 @@ class AsyncConfigTest {
     private static class ThreadNameCapturingTask implements Runnable {
         private volatile String threadName;
         @Override
+
         public void run() {
             threadName = Thread.currentThread().getName();
         }
+
         public String getThreadName() {
             return threadName;
         }
@@ -55,6 +59,7 @@ class AsyncConfigTest {
     private static class CountDownLatchTask implements Runnable {
         private final CountDownLatch latch = new CountDownLatch(1);
         @Override
+
         public void run() {
             try {
                 Thread.sleep(10); 
@@ -64,6 +69,7 @@ class AsyncConfigTest {
                 latch.countDown();
             }
         }
+
         public boolean await(long timeout, TimeUnit unit) throws InterruptedException {
             return latch.await(timeout, unit);
         }

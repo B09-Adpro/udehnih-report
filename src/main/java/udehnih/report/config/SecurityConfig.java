@@ -22,10 +22,12 @@ import jakarta.annotation.PostConstruct;
 import java.util.Arrays;
 import java.util.Collections;
 @Configuration
+
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
     @PostConstruct
+
     public void enableAuthenticationContextOnSpawnedThreads() {
         SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL);
     }
@@ -34,14 +36,17 @@ public class SecurityConfig {
     @Autowired
     private CorsFilter corsFilter;
     @Bean
+
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
     @Bean
+
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }
     @Bean
+
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -80,6 +85,7 @@ public class SecurityConfig {
         return http.build();
     }
     @Bean
+
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOriginPatterns(Collections.singletonList("*"));

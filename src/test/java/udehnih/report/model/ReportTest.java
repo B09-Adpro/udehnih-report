@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.*;
 public class ReportTest {
     @Test
+
     void testReportBuilder() {
         Integer reportId = 1;
         String studentId = AppConstants.TEST_STUDENT_ID;
@@ -37,6 +38,7 @@ public class ReportTest {
         assertEquals(updatedAt, report.getUpdatedAt());
     }
     @Test
+
     void testReportNoArgsConstructor() {
         Report report = new Report();
         assertNull(report.getReportId());
@@ -49,6 +51,7 @@ public class ReportTest {
         assertNull(report.getUpdatedAt());
     }
     @Test
+
     void testReportAllArgsConstructor() {
         Integer reportId = 1;
         String studentId = AppConstants.TEST_STUDENT_ID;
@@ -69,6 +72,7 @@ public class ReportTest {
         assertEquals(updatedAt, report.getUpdatedAt());
     }
     @Test
+
     void testReportSettersAndGetters() {
         Report report = new Report();
         Integer reportId = 1;
@@ -97,6 +101,7 @@ public class ReportTest {
         assertEquals(updatedAt, report.getUpdatedAt());
     }
     @Test
+
     void testReportEqualsAndHashCode() {
         Report report1 = ReportFactory.createOpenReport("12345", "Test Report", "This is a test report");
         Report report2 = ReportFactory.createClosedReport("56789", "Test Report 2", "This is a test report 2");
@@ -113,6 +118,7 @@ public class ReportTest {
         assertNotEquals(report1.hashCode(), report2.hashCode());
     }
     @Test
+
     void testReportToString() {
         Report report = ReportFactory.createOpenReport("12345", "Test Report", "This is a test report");
         String toString = report.toString();
@@ -122,6 +128,7 @@ public class ReportTest {
         assertTrue(toString.contains(ReportStatus.OPEN.name()));
     }
     @Test
+
     void testIsOpenWithFactory() {
         Report openReport = ReportFactory.createOpenReport("1", "t", "d");
         Report closedReport = ReportFactory.createClosedReport("1", "t", "d");

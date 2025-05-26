@@ -26,16 +26,19 @@ import udehnih.report.model.Report;
 import udehnih.report.model.UserInfo;
 import udehnih.report.service.ReportService;
 @Slf4j
+
 @RestController
 @RequestMapping("/api/reports")
 public class ReportController {
     private final ReportService reportService;
     @Autowired
     private AuthServiceClient authServiceClient;
+
     public ReportController(final ReportService reportService) {
         this.reportService = reportService;
     }
     @PostMapping
+
     public ResponseEntity<ReportResponseDto> createReport(
         @RequestBody final ReportRequestDto request,
         final HttpServletRequest httpRequest
@@ -69,6 +72,7 @@ public class ReportController {
         return ResponseEntity.status(201).body(ReportMapper.toDto(created));
     }
     @GetMapping
+
     public CompletableFuture<ResponseEntity<List<ReportResponseDto>>> getUserReports(
         @RequestParam(required = false) final String studentId,
         @RequestParam(required = false) final String StudentId,
@@ -129,6 +133,7 @@ public class ReportController {
         }
     }
     @PutMapping("/{reportId}")
+
     public ResponseEntity<ReportResponseDto> updateReport(
         @PathVariable("reportId") final Integer reportId,
         @RequestBody final ReportRequestDto request
@@ -147,6 +152,7 @@ public class ReportController {
         return response;
     }
     @DeleteMapping("/{reportId}")
+
     public ResponseEntity<Void> deleteReport(
         @PathVariable("reportId") final Integer reportId
     ) {
@@ -161,6 +167,7 @@ public class ReportController {
         return response;
     }
     @GetMapping("/{reportId}")
+
     public CompletableFuture<ResponseEntity<ReportResponseDto>> getReportById(
         @PathVariable("reportId") final Integer reportId,
         final HttpServletRequest request
@@ -201,7 +208,9 @@ public class ReportController {
                 return ResponseEntity.status(404).build();
             });
     }
-    private static boolean isBlank(final String str) {
+    private
+
+ static boolean isBlank(final String str) {
         return str == null || str.trim().isEmpty();
     }
 }

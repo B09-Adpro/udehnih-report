@@ -17,20 +17,25 @@ import java.util.concurrent.CompletableFuture;
 @Service
 public class ReportServiceImpl implements ReportService {
     private final ReportRepository reportRepository;
+
     public ReportServiceImpl(ReportRepository reportRepository) {
         this.reportRepository = reportRepository;
     }
     @Override
+
     public Report createReport(final Report report) {
         final Report newReport = ReportFactory.createOpenReport(report.getStudentId(), report.getTitle(), report.getDetail());
         return reportRepository.save(newReport);
     }
     @Override
+
     @Async("reportTaskExecutor")
+
     public CompletableFuture<List<Report>> getUserReports(final String studentId) {
         return reportRepository.findByStudentId(studentId);
     }
     @Override
+
     public Report updateReport(final Integer reportId, final Report updatedReport) {
         final Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new ReportNotFoundException(AppConstants.REPORT_NOT_FOUND_MSG + reportId));
@@ -40,16 +45,21 @@ public class ReportServiceImpl implements ReportService {
         return reportRepository.save(report);
     }
     @Override
+
     public void deleteReport(final Integer reportId) {
         reportRepository.deleteById(reportId);
     }
     @Override
+
     @Async("reportTaskExecutor")
+
     public CompletableFuture<List<Report>> getAllReports() {
         return reportRepository.findAllAsync();
     }
     @Override
+
     @Async("reportTaskExecutor")
+
     public CompletableFuture<Report> getReportById(final Integer reportId) {
         return CompletableFuture.supplyAsync(() -> 
             reportRepository.findById(reportId)
@@ -57,8 +67,10 @@ public class ReportServiceImpl implements ReportService {
         );
     }
     @Override
+
     @Transactional
     @Modifying
+
     public Report processReport(final Integer reportId, final RejectionRequestDto rejectionRequest) {
         final Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new ReportNotFoundException(AppConstants.REPORT_NOT_FOUND_MSG + reportId));

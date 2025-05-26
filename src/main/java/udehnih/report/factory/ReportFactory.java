@@ -3,9 +3,12 @@ import udehnih.report.model.Report;
 import udehnih.report.enums.ReportStatus;
 import java.time.LocalDateTime;
 public final class ReportFactory {
+
     private ReportFactory() {
     }
-    public static Report createOpenReport(final String studentId, final String title, final String detail) {
+    public
+
+ static Report createOpenReport(final String studentId, final String title, final String detail) {
         return Report.builder()
                 .studentId(studentId)
                 .title(title)
@@ -14,7 +17,9 @@ public final class ReportFactory {
                 .createdAt(LocalDateTime.now())
                 .build();
     }
-    public static Report createClosedReport(final String studentId, final String title, final String detail) {
+    public
+
+ static Report createClosedReport(final String studentId, final String title, final String detail) {
         return Report.builder()
                 .studentId(studentId)
                 .title(title)
@@ -23,7 +28,9 @@ public final class ReportFactory {
                 .createdAt(LocalDateTime.now())
                 .build();
     }
-    public static Report createInProgressReport(final String studentId, final String title, final String detail) {
+    public
+
+ static Report createInProgressReport(final String studentId, final String title, final String detail) {
         return Report.builder()
                 .studentId(studentId)
                 .title(title)

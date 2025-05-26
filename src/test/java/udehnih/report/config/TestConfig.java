@@ -16,10 +16,12 @@ import udehnih.report.util.JwtUtil;
 @TestConfiguration
 public class TestConfig implements WebMvcConfigurer {
     @Override
+
     public void configureAsyncSupport(final AsyncSupportConfigurer configurer) {
         configurer.setDefaultTimeout(5000);
     }
     @Bean
+
     public DataSource mainDataSource() {
         return new EmbeddedDatabaseBuilder()
             .setType(EmbeddedDatabaseType.H2)
@@ -27,6 +29,7 @@ public class TestConfig implements WebMvcConfigurer {
             .build();
     }
     @Bean
+
     public DataSource authDataSource() {
         return new EmbeddedDatabaseBuilder()
             .setType(EmbeddedDatabaseType.H2)
@@ -34,40 +37,49 @@ public class TestConfig implements WebMvcConfigurer {
             .build();
     }
     @Bean(name = "mainJdbcTemplate")
+
     public JdbcTemplate mainJdbcTemplate() {
         return new JdbcTemplate(mainDataSource());
     }
     @Bean(name = "authJdbcTemplate")
+
     public JdbcTemplate authJdbcTemplate() {
         return new JdbcTemplate(authDataSource());
     }
     @Bean
+
     public JwtConfig jwtConfig() {
         return new TestJwtConfig();
     }
     private static class TestJwtConfig extends JwtConfig {
         @Override
+
         public String getSecretKey() {
             return "testSecretKeyWithAtLeast32Characters12345";
         }
         @Override
+
         public Long getExpiration() {
             return 3600000L; 
         }
     }
     @Bean
+
     public JwtUtil jwtUtil() {
         return Mockito.mock(JwtUtil.class);
     }
     @Bean
+
     public CustomUserDetailsService customUserDetailsService() {
         return Mockito.mock(CustomUserDetailsService.class);
     }
     @Bean
+
     public ReportService reportService() {
         return Mockito.mock(ReportService.class);
     }
     @Bean
+
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }

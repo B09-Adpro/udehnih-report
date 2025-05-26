@@ -35,6 +35,7 @@ class JwtAuthenticationFilterTest {
     private final String testRole = "STUDENT";
     private final String testAuthHeader = AppConstants.BEARER_PREFIX + testToken;
     @BeforeEach
+
     void setUp() {
         MockitoAnnotations.openMocks(this);
         SecurityContextHolder.clearContext();
@@ -44,7 +45,8 @@ class JwtAuthenticationFilterTest {
         when(headerNames.hasMoreElements()).thenReturn(false);
     }
     @Test
-    void doFilterInternal_ShouldAuthenticateUser_WhenValidTokenIsProvided() throws Exception {
+
+    void doFilterInternalShouldAuthenticateUserWhenValidTokenIsProvided() throws Exception {
         when(request.getHeader(AppConstants.AUTHORIZATION_HEADER)).thenReturn(testAuthHeader);
         when(jwtUtil.extractUsername(testToken)).thenReturn(testEmail);
         when(jwtUtil.extractRole(testToken)).thenReturn(AppConstants.ROLE_PREFIX + testRole);
@@ -67,7 +69,8 @@ class JwtAuthenticationFilterTest {
         verify(filterChain).doFilter(request, response);
     }
     @Test
-    void doFilterInternal_ShouldContinueFilterChain_WhenNoTokenIsProvided() throws Exception {
+
+    void doFilterInternalShouldContinueFilterChainWhenNoTokenIsProvided() throws Exception {
         when(request.getHeader(AppConstants.AUTHORIZATION_HEADER)).thenReturn(null);
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
         verify(request, atLeastOnce()).getHeader(AppConstants.AUTHORIZATION_HEADER);
@@ -77,7 +80,8 @@ class JwtAuthenticationFilterTest {
         verify(filterChain).doFilter(request, response);
     }
     @Test
-    void doFilterInternal_ShouldContinueFilterChain_WhenInvalidTokenFormatIsProvided() throws Exception {
+
+    void doFilterInternalShouldContinueFilterChainWhenInvalidTokenFormatIsProvided() throws Exception {
         when(request.getHeader(AppConstants.AUTHORIZATION_HEADER)).thenReturn("InvalidToken");
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
         verify(request, atLeastOnce()).getHeader(AppConstants.AUTHORIZATION_HEADER);
@@ -87,7 +91,8 @@ class JwtAuthenticationFilterTest {
         verify(filterChain).doFilter(request, response);
     }
     @Test
-    void doFilterInternal_ShouldHandleNullUsername_WhenExtractedFromToken() throws Exception {
+
+    void doFilterInternalShouldHandleNullUsernameWhenExtractedFromToken() throws Exception {
         when(request.getHeader(AppConstants.AUTHORIZATION_HEADER)).thenReturn(testAuthHeader);
         when(jwtUtil.extractUsername(testToken)).thenReturn(null);
         when(jwtUtil.extractRole(testToken)).thenReturn(AppConstants.ROLE_PREFIX + testRole);
@@ -99,7 +104,8 @@ class JwtAuthenticationFilterTest {
         verify(filterChain).doFilter(request, response);
     }
     @Test
-    void doFilterInternal_ShouldHandleInvalidToken_WhenValidationFails() throws Exception {
+
+    void doFilterInternalShouldHandleInvalidTokenWhenValidationFails() throws Exception {
         when(request.getHeader(AppConstants.AUTHORIZATION_HEADER)).thenReturn(testAuthHeader);
         when(jwtUtil.extractUsername(testToken)).thenReturn(testEmail);
         when(jwtUtil.extractRole(testToken)).thenReturn(AppConstants.ROLE_PREFIX + testRole);
@@ -113,7 +119,8 @@ class JwtAuthenticationFilterTest {
         verify(filterChain).doFilter(request, response);
     }
     @Test
-    void doFilterInternal_ShouldHandleExceptionDuringAuthentication() throws Exception {
+
+    void doFilterInternalShouldHandleExceptionDuringAuthentication() throws Exception {
         when(request.getHeader(AppConstants.AUTHORIZATION_HEADER)).thenReturn(testAuthHeader);
         when(jwtUtil.extractUsername(testToken)).thenThrow(new RuntimeException("Test exception"));
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
@@ -124,7 +131,8 @@ class JwtAuthenticationFilterTest {
         verify(filterChain).doFilter(request, response);
     }
     @Test
-    void addUserIdToHeader_ShouldHandleDatabaseException() throws Exception {
+
+    void addUserIdToHeaderShouldHandleDatabaseException() throws Exception {
         when(request.getHeader(AppConstants.AUTHORIZATION_HEADER)).thenReturn(testAuthHeader);
         when(jwtUtil.extractUsername(testToken)).thenReturn(testEmail);
         when(jwtUtil.extractRole(testToken)).thenReturn(AppConstants.ROLE_PREFIX + testRole);
@@ -136,7 +144,8 @@ class JwtAuthenticationFilterTest {
         verify(filterChain).doFilter(request, response);
     }
     @Test
-    void setUserInfoHeaders_ShouldHandleDatabaseException() throws Exception {
+
+    void setUserInfoHeadersShouldHandleDatabaseException() throws Exception {
         when(request.getHeader(AppConstants.AUTHORIZATION_HEADER)).thenReturn(testAuthHeader);
         when(jwtUtil.extractUsername(testToken)).thenReturn(testEmail);
         when(jwtUtil.extractRole(testToken)).thenReturn(AppConstants.ROLE_PREFIX + testRole);

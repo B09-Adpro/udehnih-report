@@ -16,11 +16,13 @@ import udehnih.report.client.AuthServiceClient;
 import udehnih.report.model.UserInfo;
 import udehnih.report.util.AppConstants;
 @Service
+
 @Slf4j
 public class CustomUserDetailsService implements UserDetailsService {
     @Autowired
     private AuthServiceClient authServiceClient;
     @Override
+
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         log.info("Attempting to load user by email: {}", email);
         try {
@@ -56,6 +58,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("Error loading user: " + e.getMessage());
         }
     }
+
     public Optional<String> getUserIdByEmail(String email) {
         try {
             UserInfo userInfo = authServiceClient.getUserByEmail(email);

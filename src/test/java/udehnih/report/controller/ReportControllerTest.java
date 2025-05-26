@@ -28,6 +28,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 @WebMvcTest(ReportController.class)
+
 @Import(TestConfig.class)
 @ActiveProfiles("test")
 public class ReportControllerTest {
@@ -42,7 +43,8 @@ public class ReportControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
     @Test
-    void getUserReports_WithValidStudentRole_ReturnsReports() throws Exception {
+
+    void getUserReportsWithValidStudentRoleReturnsReports() throws Exception {
         String studentId = "12345";
         String email = "student@example.com";
         String role = "STUDENT";
@@ -71,7 +73,8 @@ public class ReportControllerTest {
                 .andExpect(jsonPath("$[1].title").value("Test Report 2"));
     }
     @Test
-    void getUserReports_WithNonStudentRole_ReturnsBadRequest() throws Exception {
+
+    void getUserReportsWithNonStudentRoleReturnsBadRequest() throws Exception {
         String studentId = "12345";
         String email = "staff@example.com";
         String role = "STAFF"; 
@@ -88,7 +91,8 @@ public class ReportControllerTest {
                 .andExpect(status().isBadRequest());
     }
     @Test
-    void getUserReports_WithMissingStudentId_ReturnsBadRequest() throws Exception {
+
+    void getUserReportsWithMissingStudentIdReturnsBadRequest() throws Exception {
         String email = "student@example.com";
         String role = "STUDENT";
         String token = "valid-token";
@@ -103,7 +107,8 @@ public class ReportControllerTest {
                 .andExpect(status().isBadRequest());
     }
     @Test
-    void getUserReports_WithEmptyStudentId_ReturnsBadRequest() throws Exception {
+
+    void getUserReportsWithEmptyStudentIdReturnsBadRequest() throws Exception {
         String email = "student@example.com";
         String role = "STUDENT";
         String token = "valid-token";
@@ -119,7 +124,8 @@ public class ReportControllerTest {
                 .andExpect(status().isBadRequest());
     }
     @Test
-    void createReport_WithValidRequest_ReturnsCreated() throws Exception {
+
+    void createReportWithValidRequestReturnsCreated() throws Exception {
         String studentId = "12345";
         String email = "student@example.com";
         String token = "valid-token";
@@ -142,7 +148,8 @@ public class ReportControllerTest {
                 .andExpect(jsonPath("$.status").value(ReportStatus.OPEN.name()));
     }
     @Test
-    void updateReport_WithValidRequest_ReturnsOk() throws Exception {
+
+    void updateReportWithValidRequestReturnsOk() throws Exception {
         Integer reportId = 1;
         ReportRequestDto request = new ReportRequestDto();
         request.setStudentId("12345");
@@ -159,7 +166,8 @@ public class ReportControllerTest {
                 .andExpect(jsonPath("$.detail").value("Updated Detail"));
     }
     @Test
-    void updateReport_WithNonExistentReport_ReturnsNotFound() throws Exception {
+
+    void updateReportWithNonExistentReportReturnsNotFound() throws Exception {
         Integer reportId = 999;
         ReportRequestDto request = new ReportRequestDto();
         request.setStudentId("12345");
@@ -173,14 +181,16 @@ public class ReportControllerTest {
                 .andExpect(status().isNotFound());
     }
     @Test
-    void deleteReport_WithValidId_ReturnsNoContent() throws Exception {
+
+    void deleteReportWithValidIdReturnsNoContent() throws Exception {
         Integer reportId = 1;
         doNothing().when(reportService).deleteReport(reportId);
         mockMvc.perform(delete("/api/reports/{reportId}", reportId))
                 .andExpect(status().isNoContent());
     }
     @Test
-    void deleteReport_WithNonExistentReport_ReturnsNotFound() throws Exception {
+
+    void deleteReportWithNonExistentReportReturnsNotFound() throws Exception {
         Integer reportId = 999;
         doThrow(new ReportNotFoundException("Report not found with id: " + reportId))
                 .when(reportService).deleteReport(reportId);

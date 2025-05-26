@@ -6,7 +6,8 @@ import java.lang.reflect.Modifier;
 import static org.junit.jupiter.api.Assertions.*;
 class AppConstantsTest {
     @Test
-    void constants_ShouldHaveCorrectValues() {
+
+    void constantsShouldHaveCorrectValues() {
         assertEquals("Authorization", AppConstants.AUTHORIZATION_HEADER);
         assertEquals("Bearer ", AppConstants.BEARER_PREFIX);
         assertEquals("email", AppConstants.EMAIL_FIELD);
@@ -17,7 +18,8 @@ class AppConstantsTest {
         assertEquals("12345", AppConstants.TEST_STUDENT_ID);
     }
     @Test
-    void constructor_ShouldBePrivate() throws NoSuchMethodException {
+
+    void constructorShouldBePrivate() throws NoSuchMethodException {
         Constructor<AppConstants> constructor = AppConstants.class.getDeclaredConstructor();
         assertTrue(Modifier.isPrivate(constructor.getModifiers()));
         constructor.setAccessible(true);

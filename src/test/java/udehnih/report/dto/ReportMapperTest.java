@@ -7,7 +7,8 @@ import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.*;
 class ReportMapperTest {
     @Test
-    void toEntity_WithValidDto_ReturnsReport() {
+
+    void toEntityWithValidDtoReturnsReport() {
         ReportRequestDto dto = new ReportRequestDto();
         dto.setStudentId("12345");
         dto.setTitle("Test Report");
@@ -19,11 +20,13 @@ class ReportMapperTest {
         assertEquals("Test Detail", result.getDetail());
     }
     @Test
-    void toEntity_WithNullDto_ReturnsNull() {
+
+    void toEntityWithNullDtoReturnsNull() {
         assertNull(ReportMapper.toEntity(null));
     }
     @Test
-    void toDto_WithValidReport_ReturnsDto() {
+
+    void toDtoWithValidReportReturnsDto() {
         LocalDateTime now = LocalDateTime.now();
         Report report = Report.builder()
                 .reportId(1)
@@ -47,7 +50,8 @@ class ReportMapperTest {
         assertEquals(now, result.getUpdatedAt());
     }
     @Test
-    void toDto_WithRejectedReport_ReturnsDtoWithRejectionMessage() {
+
+    void toDtoWithRejectedReportReturnsDtoWithRejectionMessage() {
         LocalDateTime now = LocalDateTime.now();
         Report report = Report.builder()
                 .reportId(1)
@@ -72,11 +76,13 @@ class ReportMapperTest {
         assertEquals(now, result.getUpdatedAt());
     }
     @Test
-    void toDto_WithNullReport_ReturnsNull() {
+
+    void toDtoWithNullReportReturnsNull() {
         assertNull(ReportMapper.toDto(null));
     }
     @Test
-    void toDto_WithNullRejectionMessage_ReturnsNullRejectionFields() {
+
+    void toDtoWithNullRejectionMessageReturnsNullRejectionFields() {
         LocalDateTime now = LocalDateTime.now();
         Report report = Report.builder()
                 .reportId(1)
@@ -94,7 +100,8 @@ class ReportMapperTest {
         assertNull(result.getRejectionMessageText());
     }
     @Test
-    void requestDto_settersAndGetters() {
+
+    void requestDtoSettersAndGetters() {
         ReportRequestDto dto = new ReportRequestDto();
         dto.setStudentId("s");
         dto.setTitle("t");
@@ -104,7 +111,8 @@ class ReportMapperTest {
         assertEquals("d", dto.getDetail());
     }
     @Test
-    void responseDto_settersAndGetters() {
+
+    void responseDtoSettersAndGetters() {
         ReportResponseDto dto = new ReportResponseDto();
         LocalDateTime now = LocalDateTime.now();
         dto.setReportId(1);

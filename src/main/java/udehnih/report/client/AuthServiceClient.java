@@ -9,13 +9,16 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.List;
 @Service
+
 @Slf4j
 public class AuthServiceClient {
     @Autowired
     private JwtUtil jwtUtil;
     @Autowired
+
     @Qualifier("authJdbcTemplate")
     private JdbcTemplate authJdbcTemplate;
+
     public UserInfo validateToken(String token) {
         try {
             String username = jwtUtil.extractUsername(token);
@@ -54,6 +57,7 @@ public class AuthServiceClient {
             return null;
         }
     }
+
     public UserInfo getUserByEmail(String email) {
         try {
             String countSql = "SELECT COUNT(*) FROM users WHERE email = ?";

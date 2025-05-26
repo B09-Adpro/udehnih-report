@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.Enumeration;
 import udehnih.report.model.UserInfo;
 @Slf4j
+
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
@@ -28,6 +29,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private AuthServiceClient authServiceClient;
     @Override
+
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
         logRequestInfo(request);
@@ -39,6 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         logAuthenticationState();
         chain.doFilter(request, response);
     }
+
     private void logRequestInfo(HttpServletRequest request) {
         final String authorizationHeader = request.getHeader(AppConstants.AUTHORIZATION_HEADER);
         log.info("Request to: {} {}", request.getMethod(), request.getRequestURI());
@@ -49,6 +52,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             log.debug("Header: {} = {}", headerName, request.getHeader(headerName));
         }
     }
+
     private void processJwtAuthentication(HttpServletRequest request, HttpServletResponse response) {
         final String authorizationHeader = request.getHeader(AppConstants.AUTHORIZATION_HEADER);
         if (authorizationHeader == null || !authorizationHeader.startsWith(AppConstants.BEARER_PREFIX)) {
@@ -67,6 +71,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         authenticateUser(request, response, username, role, jwt);
     }
+
     private void authenticateUser(HttpServletRequest request, HttpServletResponse response, 
                                  String username, String role, String jwt) {
         String[] roleArray = role.split(",");
@@ -98,10 +103,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         setCacheControlHeaders(response);
         setUserInfoHeaders(response, username);
     }
+
     private void setRequestAttributes(HttpServletRequest request, String username, String role) {
         request.setAttribute("X-User-Email", username);
         request.setAttribute("X-User-Role", role.replace(AppConstants.ROLE_PREFIX, ""));
     }
+
     private void setAuthenticationHeaders(HttpServletResponse response, String username, String role, String jwt) {
         response.setHeader("X-Auth-Status", "authenticated");
         response.setHeader("X-Auth-Username", username);
@@ -112,6 +119,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "Authorization, X-Auth-Status, X-Auth-Username, X-Auth-Role, X-Auth-Name, X-Auth-Token, X-User-Id, X-User-Roles");
         addUserIdToHeader(response, username);
     }
+
     private void addUserIdToHeader(HttpServletResponse response, String username) {
         try {
             UserInfo userInfo = authServiceClient.getUserByEmail(username);
@@ -122,6 +130,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             log.warn("Could not retrieve user ID: {}", e.getMessage());
         }
     }
+
     private void setAuthenticationCookies(HttpServletResponse response, String jwt) {
         jakarta.servlet.http.Cookie authCookie = new jakarta.servlet.http.Cookie("auth-token", jwt);
         authCookie.setPath("/");
@@ -134,11 +143,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         userAuthCookie.setMaxAge(24 * 60 * 60); 
         response.addCookie(userAuthCookie);
     }
+
     private void setCacheControlHeaders(HttpServletResponse response) {
         response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
         response.setHeader("Pragma", "no-cache");
         response.setHeader("Expires", "0");
     }
+
     private void setUserInfoHeaders(HttpServletResponse response, String username) {
         try {
             UserInfo userInfo = authServiceClient.getUserByEmail(username);
@@ -149,12 +160,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             log.warn("Could not retrieve user name: {}", e.getMessage());
         }
     }
+
     private void handleAuthenticationError(HttpServletResponse response, Exception e) {
         log.error("Authentication error", e);
         SecurityContextHolder.clearContext();
         response.setHeader("X-Auth-Status", "unauthenticated");
         response.setHeader("X-Auth-Error", e.getMessage());
     }
+
     private void logAuthenticationState() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null) {

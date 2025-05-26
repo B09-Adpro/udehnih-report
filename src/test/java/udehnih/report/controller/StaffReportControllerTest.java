@@ -26,6 +26,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 @WebMvcTest(StaffReportController.class)
+
 @Import(TestConfig.class)
 @ActiveProfiles("test")
 public class StaffReportControllerTest {
@@ -34,8 +35,10 @@ public class StaffReportControllerTest {
     @Autowired
     private ReportService reportService;
     @BeforeEach
+
     void setUp() {
         SecurityContextHolder.getContext().setAuthentication(
+
             new UsernamePasswordAuthenticationToken(
                 "staff@test.com",
                 "password",
@@ -44,7 +47,8 @@ public class StaffReportControllerTest {
         );
     }
     @Test
-    void getAllReports_ReturnsEmptyList() throws Exception {
+
+    void getAllReportsReturnsEmptyList() throws Exception {
         when(reportService.getAllReports())
             .thenReturn(CompletableFuture.completedFuture(Collections.emptyList()));
         MvcResult result = mockMvc.perform(get("/api/staff/reports"))
@@ -56,6 +60,7 @@ public class StaffReportControllerTest {
                 .andExpect(jsonPath("$").isEmpty());
     }
     @Test
+
     void testProcessReport() throws Exception {
         Report dummy = ReportFactory.createInProgressReport("12345", "Test", "Test Detail");
         RejectionRequestDto rejectionRequest = null;
@@ -65,6 +70,7 @@ public class StaffReportControllerTest {
                 .andExpect(jsonPath("$.status").value(ReportStatus.IN_PROGRESS.name()));
     }
     @Test
+
     void testProcessReportNotFound() throws Exception {
         Mockito.when(reportService.processReport(99, null))
                .thenThrow(new ReportNotFoundException("Report not found with id: 99"));

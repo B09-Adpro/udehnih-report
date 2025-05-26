@@ -23,6 +23,7 @@ class JwtUtilTest {
     private final String testEmail = "test@example.com";
     private final String testRole = "STUDENT";
     @BeforeEach
+
     void setUp() {
         MockitoAnnotations.openMocks(this);
         when(jwtConfig.getSecretKey()).thenReturn("testSecretKeyWithAtLeast32Characters12345");
@@ -33,7 +34,8 @@ class JwtUtilTest {
                 .build();
     }
     @Test
-    void generateToken_ShouldCreateValidToken() {
+
+    void generateTokenShouldCreateValidToken() {
         String token = jwtUtil.generateToken(testEmail, testRole);
         assertNotNull(token);
         assertFalse(token.isEmpty());
@@ -43,38 +45,44 @@ class JwtUtilTest {
         assertTrue(extractedRole.startsWith(AppConstants.ROLE_PREFIX));
     }
     @Test
-    void extractUsername_ShouldReturnCorrectUsername() {
+
+    void extractUsernameShouldReturnCorrectUsername() {
         String token = jwtUtil.generateToken(testEmail, testRole);
         assertEquals(testEmail, jwtUtil.extractUsername(token));
     }
     @Test
-    void extractRole_ShouldReturnRoleWithPrefix() {
+
+    void extractRoleShouldReturnRoleWithPrefix() {
         String token1 = jwtUtil.generateToken(testEmail, "ROLE_ADMIN");
         assertEquals("ROLE_ADMIN", jwtUtil.extractRole(token1));
         String token2 = jwtUtil.generateToken(testEmail, "STUDENT");
         assertEquals("ROLE_STUDENT", jwtUtil.extractRole(token2));
     }
     @Test
-    void extractRole_ShouldHandleNullRole() {
+
+    void extractRoleShouldHandleNullRole() {
         JwtUtil spyUtil = spy(jwtUtil);
         doReturn(null).when(spyUtil).extractClaim(anyString(), any());
         String result = spyUtil.extractRole("dummy.token.value");
         assertEquals(AppConstants.ROLE_PREFIX + AppConstants.STUDENT_ROLE, result);
     }
     @Test
-    void extractExpiration_ShouldReturnExpirationDate() {
+
+    void extractExpirationShouldReturnExpirationDate() {
         String token = jwtUtil.generateToken(testEmail, testRole);
         Date expiration = jwtUtil.extractExpiration(token);
         assertNotNull(expiration);
         assertTrue(expiration.after(new Date()));
     }
     @Test
-    void validateToken_ShouldReturnTrueForValidToken() {
+
+    void validateTokenShouldReturnTrueForValidToken() {
         String token = jwtUtil.generateToken(testEmail, testRole);
         assertTrue(jwtUtil.validateToken(token, userDetails));
     }
     @Test
-    void validateToken_ShouldReturnFalseForInvalidUsername() {
+
+    void validateTokenShouldReturnFalseForInvalidUsername() {
         String token = jwtUtil.generateToken(testEmail, testRole);
         UserDetails wrongUser = User.withUsername("wrong@example.com")
                 .password("password")
@@ -83,7 +91,8 @@ class JwtUtilTest {
         assertFalse(jwtUtil.validateToken(token, wrongUser));
     }
     @Test
-    void validateToken_ShouldReturnFalseForExpiredToken() {
+
+    void validateTokenShouldReturnFalseForExpiredToken() {
         Date pastDate = new Date(System.currentTimeMillis() - 1000); 
         UserDetails expiredTokenUser = User.withUsername(testEmail)
                 .password("password")
@@ -95,13 +104,15 @@ class JwtUtilTest {
         assertFalse(spyJwtUtil.validateToken(token, expiredTokenUser));
     }
     @Test
-    void extractClaim_ShouldExtractCustomClaim() {
+
+    void extractClaimShouldExtractCustomClaim() {
         String token = jwtUtil.generateToken(testEmail, testRole);
         String username = jwtUtil.extractClaim(token, Claims::getSubject);
         assertEquals(testEmail, username);
     }
     @Test
-    void generateAndExtractToken_ShouldHandleMultipleRoles() {
+
+    void generateAndExtractTokenShouldHandleMultipleRoles() {
         String multipleRoles = "STUDENT,STAFF,TUTOR";
         String token = jwtUtil.generateToken(testEmail, multipleRoles);
         String extractedRoles = jwtUtil.extractRole(token);
@@ -111,7 +122,8 @@ class JwtUtilTest {
         assertEquals(testEmail, jwtUtil.extractUsername(token));
     }
     @Test
-    void extractClaim_ShouldHandleException() {
+
+    void extractClaimShouldHandleException() {
         String invalidToken = "invalid.token.string";
         assertNull(jwtUtil.extractClaim(invalidToken, Claims::getSubject));
     }

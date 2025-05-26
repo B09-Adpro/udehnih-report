@@ -5,17 +5,20 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
+
 @ActiveProfiles("test")
 class JwtConfigTest {
     @Autowired
     private JwtConfig jwtConfig;
     @Test
-    void getSecretKey_ShouldReturnConfiguredValue() {
+
+    void getSecretKeyShouldReturnConfiguredValue() {
         assertNotNull(jwtConfig.getSecretKey());
         assertFalse(jwtConfig.getSecretKey().isEmpty());
     }
     @Test
-    void getExpiration_ShouldReturnConfiguredValue() {
+
+    void getExpirationShouldReturnConfiguredValue() {
         assertNotNull(jwtConfig.getExpiration());
         assertTrue(jwtConfig.getExpiration() > 0);
     }

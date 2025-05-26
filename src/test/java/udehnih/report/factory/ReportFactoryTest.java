@@ -9,7 +9,8 @@ class ReportFactoryTest {
     private static final String TITLE = "Test Report";
     private static final String DETAIL = "Test Detail";
     @Test
-    void createOpenReport_ShouldCreateReportWithOpenStatus() {
+
+    void createOpenReportShouldCreateReportWithOpenStatus() {
         Report report = ReportFactory.createOpenReport(STUDENT_ID, TITLE, DETAIL);
         assertNotNull(report);
         assertEquals(STUDENT_ID, report.getStudentId());
@@ -20,7 +21,8 @@ class ReportFactoryTest {
         assertTrue(report.isOpen());
     }
     @Test
-    void createClosedReport_ShouldCreateReportWithClosedStatus() {
+
+    void createClosedReportShouldCreateReportWithClosedStatus() {
         Report report = ReportFactory.createClosedReport(STUDENT_ID, TITLE, DETAIL);
         assertNotNull(report);
         assertEquals(STUDENT_ID, report.getStudentId());
@@ -31,7 +33,8 @@ class ReportFactoryTest {
         assertFalse(report.isOpen());
     }
     @Test
-    void createInProgressReport_ShouldCreateReportWithInProgressStatus() {
+
+    void createInProgressReportShouldCreateReportWithInProgressStatus() {
         Report report = ReportFactory.createInProgressReport(STUDENT_ID, TITLE, DETAIL);
         assertNotNull(report);
         assertEquals(STUDENT_ID, report.getStudentId());
@@ -42,7 +45,8 @@ class ReportFactoryTest {
         assertFalse(report.isOpen());
     }
     @Test
-    void createOpenReport_NullValues() {
+
+    void createOpenReportNullValues() {
         Report report = ReportFactory.createOpenReport(null, null, null);
         assertNotNull(report);
         assertNull(report.getStudentId());
@@ -52,7 +56,8 @@ class ReportFactoryTest {
         assertNotNull(report.getCreatedAt());
     }
     @Test
-    void createClosedReport_EmptyStrings() {
+
+    void createClosedReportEmptyStrings() {
         Report report = ReportFactory.createClosedReport("", "", "");
         assertNotNull(report);
         assertEquals("", report.getStudentId());
@@ -62,7 +67,8 @@ class ReportFactoryTest {
         assertNotNull(report.getCreatedAt());
     }
     @Test
-    void createInProgressReport_NullAndEmpty() {
+
+    void createInProgressReportNullAndEmpty() {
         Report report = ReportFactory.createInProgressReport(null, "", null);
         assertNotNull(report);
         assertNull(report.getStudentId());
@@ -72,7 +78,8 @@ class ReportFactoryTest {
         assertNotNull(report.getCreatedAt());
     }
     @Test
-    void createdAt_IsRecent() {
+
+    void createdAtIsRecent() {
         LocalDateTime before = LocalDateTime.now().minusSeconds(1);
         Report report = ReportFactory.createOpenReport(STUDENT_ID, TITLE, DETAIL);
         LocalDateTime after = LocalDateTime.now().plusSeconds(1);

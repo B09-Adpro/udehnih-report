@@ -23,12 +23,14 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 @RestController
+
 @RequestMapping("/api/staff/reports")
 @PreAuthorize("hasRole('STAFF')")
 public class StaffReportController {
     private final ReportService reportService;
     @Autowired
     private AuthServiceClient authServiceClient;
+
     public StaffReportController(ReportService reportService) {
         this.reportService = reportService;
     }
@@ -88,6 +90,7 @@ public class StaffReportController {
             .thenApply(ResponseEntity::ok);
     }
     @PutMapping("/{reportId}")
+
     public ResponseEntity<ReportResponseDto> processReport(
             @PathVariable("reportId") final Integer reportId,
             @RequestBody(required = false) final RejectionRequestDto rejectionRequest) {

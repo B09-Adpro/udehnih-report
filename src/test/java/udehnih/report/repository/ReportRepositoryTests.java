@@ -17,6 +17,7 @@ public class ReportRepositoryTests {
     @Autowired
     private ReportRepository reportRepository;
     @Test
+
     void whenSaveReport_thenReturnSavedReport() {
         Report report = ReportFactory.createOpenReport("12345", "Test Report", "Test Detail");
         Report savedReport = reportRepository.save(report);
@@ -25,6 +26,7 @@ public class ReportRepositoryTests {
         assertThat(savedReport.getStudentId()).isEqualTo("12345");
     }
     @Test
+
     void whenFindById_thenReturnReport() {
         Report report = ReportFactory.createOpenReport("12345", "Test Report", "Test Detail");
         entityManager.persist(report);
@@ -34,6 +36,7 @@ public class ReportRepositoryTests {
         assertThat(found.get().getStudentId()).isEqualTo("12345");
     }
     @Test
+
     void whenFindByStudentId_thenReturnReports() throws ExecutionException, InterruptedException {
         Report report1 = ReportFactory.createOpenReport("12345", "Test Report 1", "Test Detail 1");
         Report report2 = ReportFactory.createOpenReport("12345", "Test Report 2", "Test Detail 2");
@@ -45,6 +48,7 @@ public class ReportRepositoryTests {
         assertThat(found).allMatch(report -> report.getStudentId().equals("12345"));
     }
     @Test
+
     void whenDeleteReport_thenReportShouldNotExist() {
         Report report = ReportFactory.createOpenReport("12345", "Test Report", "Test Detail");
         entityManager.persist(report);
@@ -54,6 +58,7 @@ public class ReportRepositoryTests {
         assertThat(deleted).isEmpty();
     }
     @Test
+
     void whenUpdateReport_thenReportShouldBeUpdated() {
         Report report = ReportFactory.createOpenReport("12345", "Original Title", "Original Detail");
         entityManager.persist(report);
@@ -65,6 +70,7 @@ public class ReportRepositoryTests {
         assertThat(updatedReport.getDetail()).isEqualTo("Updated Detail");
     }
     @Test
+
     void whenExistsByStudentId_thenReturnTrueOrFalse() {
         Report report = ReportFactory.createOpenReport("12345", "Test Report", "Test Detail");
         entityManager.persist(report);
@@ -75,6 +81,7 @@ public class ReportRepositoryTests {
         assertThat(notExists).isFalse();
     }
     @Test
+
     void whenFindAllAsync_thenReturnAllReports() throws ExecutionException, InterruptedException {
         Report report1 = ReportFactory.createOpenReport("12345", "Test Report 1", "Test Detail 1");
         Report report2 = ReportFactory.createOpenReport("67890", "Test Report 2", "Test Detail 2");

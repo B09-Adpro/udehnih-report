@@ -8,6 +8,7 @@ public final class AppConstants {
     public static final String STUDENT_ROLE = "STUDENT";
     public static final String REPORT_NOT_FOUND_MSG = "Report not found with id: ";
     public static final String TEST_STUDENT_ID = "12345";
+
     private AppConstants() {
         throw new UnsupportedOperationException("Utility class");
     }

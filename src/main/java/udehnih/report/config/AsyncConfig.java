@@ -6,9 +6,11 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.task.DelegatingSecurityContextAsyncTaskExecutor;
 import java.util.concurrent.Executor;
 @Configuration
+
 @EnableAsync
 public class AsyncConfig {
     @Bean(name = "reportTaskExecutor")
+
     public Executor taskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(2);

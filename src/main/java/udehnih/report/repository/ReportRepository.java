@@ -10,15 +10,22 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 @SuppressWarnings("PMD.ImplicitFunctionalInterface")
+
 @Repository
 public interface ReportRepository extends JpaRepository<Report, Integer> {
     @Async
+
     @Query("SELECT r FROM Report r WHERE r.studentId = ?1")
+
     CompletableFuture<List<Report>> findByStudentId(String studentId);
+
     List<Report> findByStatus(ReportStatus status);
     @Async
+
     @Query("SELECT r FROM Report r")
+
     CompletableFuture<List<Report>> findAllAsync();
+
     Page<Report> findAll(Pageable pageable);
     default boolean existsByStudentId(String studentId) {
         return !findByStudentId(studentId).join().isEmpty();
