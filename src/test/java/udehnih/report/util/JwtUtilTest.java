@@ -8,7 +8,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import udehnih.report.config.JwtConfig;
-import java.util.ArrayList;
 import java.util.Date;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -65,6 +64,81 @@ class JwtUtilTest {
         doReturn(null).when(spyUtil).extractClaim(anyString(), any());
         String result = spyUtil.extractRole("dummy.token.value");
         assertEquals(AppConstants.ROLE_PREFIX + AppConstants.STUDENT_ROLE, result);
+    }
+    
+    @Test
+    void extractRoleShouldHandleRolesArray() {
+        String token = jwtUtil.generateToken(testEmail, "STUDENT,ADMIN");
+        
+        String extractedRoles = jwtUtil.extractRole(token);
+        
+        assertTrue(extractedRoles.contains("ROLE_STUDENT"));
+        assertTrue(extractedRoles.contains("ROLE_ADMIN"));
+    }
+    
+    @Test
+    void extractRoleShouldHandleExceptionWhenExtractingRoles() {
+        String invalidToken = "invalid.token";
+        
+        String result = jwtUtil.extractRole(invalidToken);
+        
+        assertEquals(AppConstants.ROLE_PREFIX + AppConstants.STUDENT_ROLE, result);
+    }
+    
+    @Test
+    void extractRoleShouldHandleMultipleRoles() {
+        String multipleRoles = "ADMIN,STAFF,TUTOR";
+        String token = jwtUtil.generateToken(testEmail, multipleRoles);
+        
+        String extractedRoles = jwtUtil.extractRole(token);
+        
+        assertTrue(extractedRoles.contains(AppConstants.ROLE_PREFIX + "ADMIN"));
+        assertTrue(extractedRoles.contains(AppConstants.ROLE_PREFIX + "STAFF"));
+        assertTrue(extractedRoles.contains(AppConstants.ROLE_PREFIX + "TUTOR"));
+    }
+    
+    @Test
+    void extractRoleShouldHandleSingleRoleWithoutPrefix() {
+        String token = jwtUtil.generateToken(testEmail, "ADMIN");
+        
+        String extractedRole = jwtUtil.extractRole(token);
+        
+        assertEquals(AppConstants.ROLE_PREFIX + "ADMIN", extractedRole);
+    }
+    
+    @Test
+    void extractRoleShouldHandleSingleRoleWithPrefix() {
+        String token = jwtUtil.generateToken(testEmail, "ROLE_ADMIN");
+        
+        String extractedRole = jwtUtil.extractRole(token);
+        
+        assertEquals("ROLE_ADMIN", extractedRole);
+    }
+    
+    @Test
+    void extractRoleShouldReturnDefaultRoleForMalformedToken() {
+        String malformedToken = "malformed.token.string";
+        
+
+        String extractedRole = jwtUtil.extractRole(malformedToken);
+        
+        assertEquals(AppConstants.ROLE_PREFIX + AppConstants.STUDENT_ROLE, extractedRole);
+    }
+    
+    @Test
+    void extractRoleShouldReturnDefaultRoleForEmptyToken() {
+        String emptyToken = "";
+        
+        String extractedRole = jwtUtil.extractRole(emptyToken);
+        
+        assertEquals(AppConstants.ROLE_PREFIX + AppConstants.STUDENT_ROLE, extractedRole);
+    }
+    
+    @Test
+    void extractRoleShouldReturnDefaultRoleForNullToken() {
+        String extractedRole = jwtUtil.extractRole(null);
+        
+        assertEquals(AppConstants.ROLE_PREFIX + AppConstants.STUDENT_ROLE, extractedRole);
     }
     @Test
 

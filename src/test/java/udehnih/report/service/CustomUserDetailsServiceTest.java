@@ -140,4 +140,49 @@ class CustomUserDetailsServiceTest {
         
         assertNull(result);
     }
+    
+    @Test
+    void loadUserByUsernameShouldUseDefaultRoleWhenUserHasNoRoles() {
+        UserInfo userInfo = UserInfo.builder()
+            .id(testId)
+            .email(testEmail)
+            .name(testName)
+            .roles(Collections.emptyList())
+            .build();
+        
+        when(authServiceClient.getUserByEmail(testEmail)).thenReturn(userInfo);
+        
+        UserDetails userDetails = userDetailsService.loadUserByUsername(testEmail);
+        
+        assertNotNull(userDetails);
+        assertEquals(testEmail, userDetails.getUsername());
+        Collection<? extends GrantedAuthority> authorities = userDetails.getAuthorities();
+        assertEquals(1, authorities.size());
+        assertTrue(authorities.contains(new SimpleGrantedAuthority("ROLE_STUDENT")));
+    }
+    
+    @Test
+    void loadUserByUsernameShouldHandleExceptionDuringUserRetrieval() {
+        when(authServiceClient.getUserByEmail(testEmail)).thenThrow(new RuntimeException("Database error"));
+        
+        assertThrows(UsernameNotFoundException.class, () -> userDetailsService.loadUserByUsername(testEmail));
+    }
+    
+    @Test
+    void getUserIdByEmailShouldHandleExceptionDuringUserRetrieval() {
+        when(authServiceClient.getUserByEmail(testEmail)).thenThrow(new RuntimeException("Database error"));
+        
+        Optional<String> result = userDetailsService.getUserIdByEmail(testEmail);
+        
+        assertFalse(result.isPresent());
+    }
+    
+    @Test
+    void getUserInfoByEmailShouldHandleExceptionDuringUserRetrieval() {
+        when(authServiceClient.getUserByEmail(testEmail)).thenThrow(new RuntimeException("Database error"));
+        
+        UserInfo result = userDetailsService.getUserInfoByEmail(testEmail);
+        
+        assertNull(result);
+    }
 }

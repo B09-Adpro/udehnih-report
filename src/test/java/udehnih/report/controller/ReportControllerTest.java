@@ -255,4 +255,280 @@ public class ReportControllerTest {
                 .with(csrf()))
                 .andExpect(status().isNotFound());
     }
+    
+    @Test
+    @WithMockUser(username = "student@example.com", roles = {"STUDENT"})
+    void getReportByIdWithValidIdReturnsReport() throws Exception {
+        Integer reportId = 1;
+        String studentId = "12345";
+        String email = "student@example.com";
+        
+        UserInfo userInfo = UserInfo.builder()
+            .id(Long.valueOf(studentId))
+            .email(email)
+            .name("Test Student")
+            .roles(Arrays.asList("ROLE_STUDENT"))
+            .build();
+        
+        when(authServiceClient.getUserByEmail(email)).thenReturn(userInfo);
+        
+        Report report = ReportFactory.createOpenReport(studentId, "Test Report", "Test Detail");
+        when(reportService.getReportById(reportId))
+            .thenReturn(CompletableFuture.completedFuture(report));
+        
+        MvcResult mvcResult = mockMvc.perform(get("/api/reports/{reportId}", reportId)
+                .with(csrf()))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+        
+        mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.studentId").value(studentId))
+                .andExpect(jsonPath("$.title").value("Test Report"))
+                .andExpect(jsonPath("$.detail").value("Test Detail"));
+    }
+    
+    @Test
+    @WithMockUser(username = "student@example.com", roles = {"STUDENT"})
+    void getReportByIdWithNonExistentReportReturnsNotFound() throws Exception {
+        Integer reportId = 999;
+        String studentId = "12345";
+        String email = "student@example.com";
+        
+        UserInfo userInfo = UserInfo.builder()
+            .id(Long.valueOf(studentId))
+            .email(email)
+            .name("Test Student")
+            .roles(Arrays.asList("ROLE_STUDENT"))
+            .build();
+        
+        when(authServiceClient.getUserByEmail(email)).thenReturn(userInfo);
+        
+        CompletableFuture<Report> future = new CompletableFuture<>();
+        future.completeExceptionally(new ReportNotFoundException("Report not found with id: " + reportId));
+        when(reportService.getReportById(reportId)).thenReturn(future);
+        
+        MvcResult mvcResult = mockMvc.perform(get("/api/reports/{reportId}", reportId)
+                .with(csrf()))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+        
+        mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isNotFound());
+    }
+    
+    @Test
+    @WithMockUser(username = "other@example.com", roles = {"STUDENT"})
+    void getReportByIdWithDifferentUserReturnsForbidden() throws Exception {
+        Integer reportId = 1;
+        String reportOwnerId = "12345";
+        String requesterId = "67890";
+        String email = "other@example.com";
+        
+        UserInfo userInfo = UserInfo.builder()
+            .id(Long.valueOf(requesterId))
+            .email(email)
+            .name("Other Student")
+            .roles(Arrays.asList("ROLE_STUDENT"))
+            .build();
+        
+        when(authServiceClient.getUserByEmail(email)).thenReturn(userInfo);
+        
+        Report report = ReportFactory.createOpenReport(reportOwnerId, "Test Report", "Test Detail");
+        when(reportService.getReportById(reportId))
+            .thenReturn(CompletableFuture.completedFuture(report));
+        
+        MvcResult mvcResult = mockMvc.perform(get("/api/reports/{reportId}", reportId)
+                .with(csrf()))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+        
+        mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isForbidden());
+    }
+    
+    @Test
+    @WithMockUser(username = "staff@example.com", roles = {"STAFF"})
+    void getReportByIdWithStaffRoleReturnsReport() throws Exception {
+        Integer reportId = 1;
+        String studentId = "12345";
+        String staffId = "67890";
+        String email = "staff@example.com";
+        
+        UserInfo userInfo = UserInfo.builder()
+            .id(Long.valueOf(staffId))
+            .email(email)
+            .name("Test Staff")
+            .roles(Arrays.asList("ROLE_STAFF"))
+            .build();
+        
+        when(authServiceClient.getUserByEmail(email)).thenReturn(userInfo);
+        
+        Report report = ReportFactory.createOpenReport(studentId, "Test Report", "Test Detail");
+        when(reportService.getReportById(reportId))
+            .thenReturn(CompletableFuture.completedFuture(report));
+        
+        MvcResult mvcResult = mockMvc.perform(get("/api/reports/{reportId}", reportId)
+                .with(csrf()))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+        
+        mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.studentId").value(studentId))
+                .andExpect(jsonPath("$.title").value("Test Report"))
+                .andExpect(jsonPath("$.detail").value("Test Detail"));
+    }
+    
+    @Test
+    @WithMockUser(username = "student@example.com", roles = {"STUDENT"})
+    void getUserReportsWithServerErrorReturnsInternalServerError() throws Exception {
+        String studentId = "12345";
+        String email = "student@example.com";
+        
+        UserInfo userInfo = UserInfo.builder()
+            .id(Long.valueOf(studentId))
+            .email(email)
+            .name("Test Student")
+            .roles(Arrays.asList("ROLE_STUDENT"))
+            .build();
+        
+        when(authServiceClient.getUserByEmail(email)).thenReturn(userInfo);
+        
+        CompletableFuture<List<Report>> future = new CompletableFuture<>();
+        future.completeExceptionally(new RuntimeException("Server error"));
+        when(reportService.getUserReports(studentId)).thenReturn(future);
+        
+        MvcResult mvcResult = mockMvc.perform(get("/api/reports")
+                .param("studentId", studentId)
+                .with(csrf()))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+        
+        mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isInternalServerError());
+    }
+    
+    @Test
+    @WithMockUser(username = "student@example.com", roles = {"STUDENT"})
+    void createReportWithNullUserInfoReturnsNotFound() throws Exception {
+        String email = "student@example.com";
+        
+        // Mock null user info to test 404 response
+        when(authServiceClient.getUserByEmail(email)).thenReturn(null);
+        
+        ReportRequestDto request = new ReportRequestDto();
+        request.setTitle("Test Report");
+        request.setDetail("Test Detail");
+        
+        mockMvc.perform(post("/api/reports")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf())
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound());
+    }
+    
+    @Test
+    @WithMockUser(username = "student@example.com", roles = {"STUDENT"})
+    void createReportWithNullUserIdReturnsNotFound() throws Exception {
+        String email = "student@example.com";
+        
+        // Mock user info with null ID
+        UserInfo userInfo = UserInfo.builder()
+            .id(null)
+            .email(email)
+            .name("Test Student")
+            .roles(Arrays.asList("ROLE_STUDENT"))
+            .build();
+        
+        when(authServiceClient.getUserByEmail(email)).thenReturn(userInfo);
+        
+        ReportRequestDto request = new ReportRequestDto();
+        request.setTitle("Test Report");
+        request.setDetail("Test Detail");
+        
+        mockMvc.perform(post("/api/reports")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf())
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound());
+    }
+    
+    @Test
+    @WithMockUser(username = "student@example.com", roles = {"STUDENT"})
+    void createReportWithNullStudentIdAfterMappingReturnsCreated() throws Exception {
+        String studentId = "12345";
+        String email = "student@example.com";
+        
+        UserInfo userInfo = UserInfo.builder()
+            .id(Long.valueOf(studentId))
+            .email(email)
+            .name("Test Student")
+            .roles(Arrays.asList("ROLE_STUDENT"))
+            .build();
+        
+        when(authServiceClient.getUserByEmail(email)).thenReturn(userInfo);
+        
+        ReportRequestDto request = new ReportRequestDto();
+        request.setTitle("Test Report");
+        request.setDetail("Test Detail");
+        
+        // Create a report with null studentId to test the null check in controller
+        Report created = ReportFactory.createOpenReport(null, "Test Report", "Test Detail");
+        when(reportService.createReport(any(Report.class))).thenReturn(created);
+        
+        mockMvc.perform(post("/api/reports")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf())
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated());
+    }
+    
+
+    @Test
+    @WithMockUser(username = "student@example.com", roles = {"STUDENT"})
+    void getReportByIdWithNullUserInfoReturnsNotFound() throws Exception {
+        Integer reportId = 1;
+        String email = "student@example.com";
+        
+        // Mock null user info
+        when(authServiceClient.getUserByEmail(email)).thenReturn(null);
+        
+        MvcResult mvcResult = mockMvc.perform(get("/api/reports/{reportId}", reportId)
+                .with(csrf()))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+        
+        mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isNotFound());
+    }
+    
+    @Test
+    @WithMockUser(username = "student@example.com", roles = {"STUDENT"})
+    void getReportByIdWithNullUserIdReturnsBadRequest() throws Exception {
+        Integer reportId = 1;
+        String email = "student@example.com";
+        
+        // Mock user info with null ID
+        UserInfo userInfo = UserInfo.builder()
+            .id(null)
+            .email(email)
+            .name("Test Student")
+            .roles(Arrays.asList("ROLE_STUDENT"))
+            .build();
+        
+        when(authServiceClient.getUserByEmail(email)).thenReturn(userInfo);
+        
+        Report report = ReportFactory.createOpenReport("12345", "Test Report", "Test Detail");
+        when(reportService.getReportById(reportId))
+            .thenReturn(CompletableFuture.completedFuture(report));
+        
+        MvcResult mvcResult = mockMvc.perform(get("/api/reports/{reportId}", reportId)
+                .with(csrf()))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+        
+        mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isBadRequest());
+    }
 }

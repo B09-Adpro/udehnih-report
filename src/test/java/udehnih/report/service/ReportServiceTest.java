@@ -178,4 +178,37 @@ public class ReportServiceTest {
         assertEquals(2, result.size());
         verify(reportRepository).findAllAsync();
     }
+    
+    @Test
+    void getReportByIdShouldReturnReport() throws ExecutionException, InterruptedException {
+        Integer reportId = 1;
+        Report expectedReport = ReportFactory.createOpenReport("12345", "Test Report", "Test Detail");
+        expectedReport.setReportId(reportId);
+        
+        when(reportRepository.findById(reportId)).thenReturn(Optional.of(expectedReport));
+        
+        CompletableFuture<Report> futureResult = reportService.getReportById(reportId);
+        Report result = futureResult.get();
+        
+        assertEquals(reportId, result.getReportId());
+        assertEquals("Test Report", result.getTitle());
+        assertEquals("Test Detail", result.getDetail());
+        verify(reportRepository).findById(reportId);
+    }
+    
+    @Test
+    void getReportByIdShouldThrowExceptionWhenReportNotFound() {
+        Integer reportId = 999;
+        when(reportRepository.findById(reportId)).thenReturn(Optional.empty());
+        
+        CompletableFuture<Report> futureResult = reportService.getReportById(reportId);
+        
+        ExecutionException exception = assertThrows(ExecutionException.class, () -> {
+            futureResult.get();
+        });
+        
+        assertTrue(exception.getCause() instanceof ReportNotFoundException);
+        assertEquals("Report not found with id: " + reportId, exception.getCause().getMessage());
+        verify(reportRepository).findById(reportId);
+    }
 }
