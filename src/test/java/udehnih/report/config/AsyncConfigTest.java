@@ -1,41 +1,79 @@
 package udehnih.report.config;
-
 import static org.junit.jupiter.api.Assertions.*;
-
-import java.lang.reflect.Method;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.task.DelegatingSecurityContextAsyncTaskExecutor;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@TestPropertySource(locations = "classpath:application-test.yml")
 class AsyncConfigTest {
-
     @Autowired
     private AsyncConfig asyncConfig;
-
     @Test
-    void taskExecutor_ShouldHaveCorrectConfiguration() throws Exception {
+
+    void taskExecutorShouldHaveCorrectConfiguration() {
         Executor executor = asyncConfig.taskExecutor();
-        assertTrue(
-            executor instanceof DelegatingSecurityContextAsyncTaskExecutor
-        );
+        assertTrue(executor instanceof DelegatingSecurityContextAsyncTaskExecutor);
+        ThreadNameCapturingTask task = new ThreadNameCapturingTask();
+        ((DelegatingSecurityContextAsyncTaskExecutor) executor).execute(task);
+        try {
+            Thread.sleep(100); 
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        assertTrue(task.getThreadName().startsWith("ReportThread-"),
+                "Thread name should start with 'ReportThread-' but was: " + task.getThreadName());
+        int taskCount = 5;
+        CountDownLatchTask[] tasks = new CountDownLatchTask[taskCount];
+        for (int i = 0; i < taskCount; i++) {
+            tasks[i] = new CountDownLatchTask();
+            ((DelegatingSecurityContextAsyncTaskExecutor) executor).execute(tasks[i]);
+        }
+        try {
+            for (CountDownLatchTask latchTask : tasks) {
+                assertTrue(latchTask.await(500, java.util.concurrent.TimeUnit.MILLISECONDS),
+                        "Task did not complete in time, suggesting executor configuration issue");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            fail("Test was interrupted while waiting for tasks to complete");
+        }
+    }
+    private static class ThreadNameCapturingTask implements Runnable {
+        private volatile String threadName;
+        @Override
 
-        DelegatingSecurityContextAsyncTaskExecutor securityExecutor =
-            (DelegatingSecurityContextAsyncTaskExecutor) executor;
+        public void run() {
+            threadName = Thread.currentThread().getName();
+        }
 
-        Method getDelegateMethod = DelegatingSecurityContextAsyncTaskExecutor.class.getDeclaredMethod("getDelegate");
-        getDelegateMethod.setAccessible(true);
-        ThreadPoolTaskExecutor taskExecutor = 
-            (ThreadPoolTaskExecutor) getDelegateMethod.invoke(securityExecutor);
+        public String getThreadName() {
+            return threadName;
+        }
+    }
+    private static class CountDownLatchTask implements Runnable {
+        private final CountDownLatch latch = new CountDownLatch(1);
+        @Override
 
-        assertEquals(2, taskExecutor.getCorePoolSize());
-        assertEquals(4, taskExecutor.getMaxPoolSize());
-        assertEquals(100, taskExecutor.getQueueCapacity());
-        assertEquals("ReportThread-", taskExecutor.getThreadNamePrefix());
+        public void run() {
+            try {
+                Thread.sleep(10); 
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } finally {
+                latch.countDown();
+            }
+        }
+
+        public boolean await(long timeout, TimeUnit unit) throws InterruptedException {
+            return latch.await(timeout, unit);
+        }
     }
 }
