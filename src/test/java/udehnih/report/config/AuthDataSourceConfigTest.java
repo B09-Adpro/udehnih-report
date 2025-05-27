@@ -21,8 +21,13 @@ class AuthDataSourceConfigTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         
-        // Set up test environment
+        // Set up test environment more explicitly
         System.setProperty("spring.profiles.active", "test");
+        
+        // Explicitly set H2 database URL for tests
+        System.setProperty("AUTH_DB_URL", "jdbc:h2:mem:authdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE");
+        System.setProperty("AUTH_DB_USERNAME", "sa");
+        System.setProperty("AUTH_DB_PASSWORD", "sa");
     }
 
     @AfterEach
