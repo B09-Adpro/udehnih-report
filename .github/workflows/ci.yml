@@ -27,8 +27,8 @@ jobs:
           cache: 'gradle'
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
-      - name: Run unit tests
-        run: ./gradlew test
+      - name: Run unit tests and generate JaCoCo report
+        run: ./gradlew test jacocoTestReport
         env:
           DB_URL: ${{ secrets.DB_URL }}
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
@@ -52,4 +52,4 @@ jobs:
         uses: codacy/codacy-coverage-reporter-action@v1.3.0
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: jacoco*.xml
+          coverage-reports: build/reports/jacoco/test/jacocoTestReport.xml
