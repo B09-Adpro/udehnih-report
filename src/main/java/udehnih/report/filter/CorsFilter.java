@@ -3,9 +3,10 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
@@ -14,20 +15,48 @@ import java.io.IOException;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class CorsFilter extends OncePerRequestFilter {
     
-    @Value("${cors.allowed-headers}")
-    private String allowedHeaders;
+    @Autowired
+    private Environment env;
     
-    @Value("${cors.exposed-headers}")
-    private String exposedHeaders;
+    private String getAllowedHeaders() {
+        String headers = env.getProperty("ALLOWED_HEADERS");
+        if (headers == null || headers.isEmpty()) {
+            return "Authorization, Content-Type, Accept, X-Requested-With, Cache-Control, Access-Control-Allow-Origin, Access-Control-Allow-Headers, X-Auth-Token";
+        }
+        return headers;
+    }
     
-    @Value("${cors.allowed-methods}")
-    private String allowedMethods;
+    private String getExposedHeaders() {
+        String headers = env.getProperty("EXPOSED_HEADERS");
+        if (headers == null || headers.isEmpty()) {
+            return "Authorization, X-Auth-Status, X-Auth-Username, X-Auth-Role, X-Auth-Name, X-User-Email, X-User-Role, X-Auth-Token, X-User-Id, Access-Control-Allow-Origin, Access-Control-Allow-Credentials";
+        }
+        return headers;
+    }
     
-    @Value("${cors.allow-credentials}")
-    private String allowCredentials;
+    private String getAllowedMethods() {
+        String methods = env.getProperty("ALLOWED_METHODS");
+        if (methods == null || methods.isEmpty()) {
+            return "GET, POST, PUT, DELETE, OPTIONS, PATCH";
+        }
+        return methods;
+    }
     
-    @Value("${cors.allowed-origins:*}")
-    private String allowedOrigins;
+    private String getAllowCredentials() {
+        String credentials = env.getProperty("ALLOWED_CREDENTIALS");
+        if (credentials == null || credentials.isEmpty()) {
+            return "true";
+        }
+        return credentials;
+    }
+    
+    private String getAllowedOrigins() {
+        String origins = env.getProperty("ALLOWED_ORIGINS");
+        if (origins == null || origins.isEmpty()) {
+            return "*";
+        }
+        return origins;
+    }
     
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -37,7 +66,7 @@ public class CorsFilter extends OncePerRequestFilter {
             origin = "*";
         }
         
-        // Check if the origin is allowed (if allowedOrigins is not '*')
+        String allowedOrigins = getAllowedOrigins();
         if (!"*".equals(allowedOrigins)) {
             boolean allowed = false;
             for (String allowedOrigin : allowedOrigins.split(",")) {
@@ -52,11 +81,11 @@ public class CorsFilter extends OncePerRequestFilter {
         }
         
         response.setHeader("Access-Control-Allow-Origin", origin);
-        response.setHeader("Access-Control-Allow-Methods", allowedMethods);
-        response.setHeader("Access-Control-Allow-Headers", allowedHeaders);
-        response.setHeader("Access-Control-Expose-Headers", exposedHeaders);
+        response.setHeader("Access-Control-Allow-Methods", getAllowedMethods());
+        response.setHeader("Access-Control-Allow-Headers", getAllowedHeaders());
+        response.setHeader("Access-Control-Expose-Headers", getExposedHeaders());
         response.setHeader("Access-Control-Max-Age", "3600");
-        response.setHeader("Access-Control-Allow-Credentials", allowCredentials);
+        response.setHeader("Access-Control-Allow-Credentials", getAllowCredentials());
         response.setHeader("Vary", "Origin");
         
         if ("OPTIONS".equals(request.getMethod())) {

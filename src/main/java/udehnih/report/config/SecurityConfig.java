@@ -56,6 +56,7 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/error").permitAll()
+                .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/api/test/public").permitAll()
                 .requestMatchers("/api/test/authenticated").authenticated()
                 .requestMatchers("/api/test/student").hasRole("STUDENT")
