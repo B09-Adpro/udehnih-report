@@ -84,18 +84,26 @@ public class StaffReportController {
         UserInfo userInfo = null;
         
         if (id != null) {
-            studentNames.put(studentId, "User " + id); 
-        } else {
-            if (studentId.contains("@")) {
-                userInfo = authServiceClient.getUserByEmail(studentId);
-                if (userInfo != null) {
+            try {
+                userInfo = authServiceClient.getUserById(id);
+                if (userInfo != null && userInfo.getName() != null) {
                     studentNames.put(studentId, userInfo.getName());
-                } else {
-                    studentNames.put(studentId, UNKNOWN_USER);
+                    return;
                 }
+            } catch (Exception e) {
+                log.error("Error fetching user by ID {}: {}", id, e.getMessage());
+                // Fall through to default handling
+            }
+            studentNames.put(studentId, "User " + id);
+        } else if (studentId.contains("@")) {
+            userInfo = authServiceClient.getUserByEmail(studentId);
+            if (userInfo != null) {
+                studentNames.put(studentId, userInfo.getName());
             } else {
                 studentNames.put(studentId, UNKNOWN_USER);
             }
+        } else {
+            studentNames.put(studentId, UNKNOWN_USER);
         }
     }
 

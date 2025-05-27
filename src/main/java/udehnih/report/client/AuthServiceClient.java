@@ -63,6 +63,12 @@ public class AuthServiceClient {
 
     public UserInfo getUserByEmail(String email) {
         try {
+            // Check if the email is actually a numeric user ID
+            if (email != null && email.matches("\\d+")) {
+                log.info("Email appears to be a numeric ID: {}, trying to look up by ID", email);
+                return getUserById(Long.parseLong(email));
+            }
+            
             String countSql = "SELECT COUNT(*) FROM users WHERE email = ?";
             Integer count = authJdbcTemplate.queryForObject(countSql, Integer.class, email);
             if (count == null || count == 0) {
@@ -94,6 +100,49 @@ public class AuthServiceClient {
                 .build();
         } catch (Exception e) {
             log.error("Error retrieving user information: {}", e.getMessage());
+            return null;
+        }
+    }
+    
+    public UserInfo getUserById(Long userId) {
+        try {
+            String countSql = "SELECT COUNT(*) FROM users WHERE id = ?";
+            Integer count = authJdbcTemplate.queryForObject(countSql, Integer.class, userId);
+            if (count == null || count == 0) {
+                log.warn("User with ID {} not found", userId);
+                return null;
+            }
+            
+            String userEmailSql = "SELECT email FROM users WHERE id = ?";
+            String email = authJdbcTemplate.queryForObject(userEmailSql, String.class, userId);
+            
+            String userNameSql = "SELECT name FROM users WHERE id = ?";
+            String name = authJdbcTemplate.queryForObject(userNameSql, String.class, userId);
+            
+            String rolesSql = "SELECT r.name FROM roles r " +
+                             "JOIN user_roles ur ON r.id = ur.role_id " +
+                             "JOIN users u ON u.id = ur.user_id " +
+                             "WHERE u.id = ?";
+            List<String> roles = new ArrayList<>();
+            try {
+                roles = authJdbcTemplate.queryForList(rolesSql, String.class, userId);
+                if (roles.isEmpty()) {
+                    roles.add("STUDENT"); 
+                }
+            } catch (Exception e) {
+                log.warn("Error retrieving user roles for ID {}: {}", userId, e.getMessage());
+                roles.add("STUDENT"); 
+            }
+            
+            log.info("Successfully retrieved user by ID {}: email={}, roles={}", userId, email, roles);
+            return UserInfo.builder()
+                .id(userId)
+                .email(email)
+                .name(name)
+                .roles(roles)
+                .build();
+        } catch (Exception e) {
+            log.error("Error retrieving user information for ID {}: {}", userId, e.getMessage());
             return null;
         }
     }
