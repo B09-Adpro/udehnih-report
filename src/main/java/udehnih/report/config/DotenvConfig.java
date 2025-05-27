@@ -55,11 +55,9 @@ public class DotenvConfig implements InitializingBean {
                                 value = value.substring(1, value.length() - 1);
                             }
                             
-                            // Set both system property and environment variable
                             props.setProperty(key, value);
                             System.setProperty(key, value);
                             
-                            // Log critical database variables
                             if (key.equals("AUTH_DB_URL") || key.equals("AUTH_DB_USERNAME") || key.equals("DB_URL") || key.equals("DB_USERNAME")) {
                                 log.info("Setting environment variable: {} = {}", key, value);
                             } else if (key.equals("AUTH_DB_PASSWORD") || key.equals("DB_PASSWORD")) {
@@ -130,11 +128,9 @@ public class DotenvConfig implements InitializingBean {
                     }
                 }
 
-                // Add properties to Spring environment for direct access
                 PropertiesPropertySource propertySource = new PropertiesPropertySource("dotenv", props);
                 environment.getPropertySources().addFirst(propertySource);
-                
-                // Verify critical environment variables
+
                 log.info("Environment variables loaded from .env file and set as system properties:");
                 verifyAndLogProperty("DB_URL");
                 verifyAndLogProperty("DB_USERNAME");
@@ -154,8 +150,50 @@ public class DotenvConfig implements InitializingBean {
                 log.info("DB_URL from environment: {}", environment.getProperty("DB_URL"));
                 log.info("spring.datasource.url from environment: {}", environment.getProperty("spring.datasource.url"));
             } else {
-                log.error("ERROR: .env file not found at {}. Database configuration will fail.", envPath);
-                throw new IllegalStateException("Required .env file not found at " + envPath);
+                boolean isTestEnvironment = false;
+                
+                for (String profile : environment.getActiveProfiles()) {
+                    if (profile.equals("test")) {
+                        isTestEnvironment = true;
+                        break;
+                    }
+                }
+                
+                // Check for JUnit classes
+                try {
+                    Class.forName("org.junit.jupiter.api.Test");
+                    isTestEnvironment = true;
+                } catch (ClassNotFoundException e) {
+                    // Not in a test environment
+                }
+                
+                // Check for CI environment variables (like in GitHub Actions)
+                if (System.getenv("CI") != null || System.getenv("GITHUB_ACTIONS") != null) {
+                    isTestEnvironment = true;
+                    log.info("Running in CI environment, skipping .env file requirement");
+                }
+                
+                if (isTestEnvironment) {
+                    log.info(".env file not found at {}, but we're in a test environment so continuing anyway", envPath);
+                    Properties testProps = new Properties();
+                    testProps.setProperty("spring.datasource.url", "jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE");
+                    testProps.setProperty("spring.datasource.username", "sa");
+                    testProps.setProperty("spring.datasource.password", "sa");
+                    testProps.setProperty("spring.datasource.driver-class-name", "org.h2.Driver");
+                    testProps.setProperty("auth.datasource.url", "jdbc:h2:mem:authdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE");
+                    testProps.setProperty("auth.datasource.username", "sa");
+                    testProps.setProperty("auth.datasource.password", "sa");
+                    testProps.setProperty("auth.datasource.driver-class-name", "org.h2.Driver");
+                    
+                    environment.getPropertySources().addFirst(new PropertiesPropertySource("testProperties", testProps));
+                    
+                    for (String key : testProps.stringPropertyNames()) {
+                        System.setProperty(key, testProps.getProperty(key));
+                    }
+                } else {
+                    log.error("ERROR: .env file not found at {}. Database configuration will fail.", envPath);
+                    throw new IllegalStateException("Required .env file not found at " + envPath);
+                }
             }
         } catch (IOException e) {
             log.error("Error reading .env file: {}", e.getMessage(), e);
