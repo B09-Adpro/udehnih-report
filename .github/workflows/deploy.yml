@@ -38,6 +38,7 @@ jobs:
             docker run -d \
             --name=web_server \
             -p 8000:8080 \
+            -v /opt/udehnih/.env:/opt/udehnih/.env \
             -e DB_URL="${{ secrets.DB_URL }}" \
             -e DB_USERNAME="${{ secrets.DB_USERNAME }}" \
             -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
