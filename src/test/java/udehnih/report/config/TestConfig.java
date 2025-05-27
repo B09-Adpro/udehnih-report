@@ -1,11 +1,10 @@
 package udehnih.report.config;
+
 import javax.sql.DataSource;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer;
@@ -26,18 +25,34 @@ public class TestConfig implements WebMvcConfigurer {
     @Bean
 
     public DataSource mainDataSource() {
-        return new EmbeddedDatabaseBuilder()
-            .setType(EmbeddedDatabaseType.H2)
-            .setName("testdb")
-            .build();
+        org.springframework.jdbc.datasource.DriverManagerDataSource dataSource = new org.springframework.jdbc.datasource.DriverManagerDataSource();
+        dataSource.setDriverClassName("org.h2.Driver");
+        dataSource.setUrl("jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE");
+        dataSource.setUsername("sa");
+        dataSource.setPassword("sa");
+        
+        org.springframework.jdbc.datasource.init.ResourceDatabasePopulator populator = 
+            new org.springframework.jdbc.datasource.init.ResourceDatabasePopulator();
+        populator.addScript(new org.springframework.core.io.ClassPathResource("schema.sql"));
+        populator.execute(dataSource);
+        
+        return dataSource;
     }
     @Bean
 
     public DataSource authDataSource() {
-        return new EmbeddedDatabaseBuilder()
-            .setType(EmbeddedDatabaseType.H2)
-            .setName("authdb")
-            .build();
+        org.springframework.jdbc.datasource.DriverManagerDataSource dataSource = new org.springframework.jdbc.datasource.DriverManagerDataSource();
+        dataSource.setDriverClassName("org.h2.Driver");
+        dataSource.setUrl("jdbc:h2:mem:authdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE");
+        dataSource.setUsername("sa");
+        dataSource.setPassword("sa");
+        
+        org.springframework.jdbc.datasource.init.ResourceDatabasePopulator populator = 
+            new org.springframework.jdbc.datasource.init.ResourceDatabasePopulator();
+        populator.addScript(new org.springframework.core.io.ClassPathResource("auth-schema.sql"));
+        populator.execute(dataSource);
+        
+        return dataSource;
     }
     @Bean(name = "mainJdbcTemplate")
 

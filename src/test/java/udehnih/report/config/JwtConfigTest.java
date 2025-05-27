@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @ActiveProfiles("test")
 @TestPropertySource(locations = "classpath:application-test.yml")
+@org.springframework.context.annotation.Import(TestDatabaseConfig.class)
 class JwtConfigTest {
     @Autowired
     private JwtConfig jwtConfig;

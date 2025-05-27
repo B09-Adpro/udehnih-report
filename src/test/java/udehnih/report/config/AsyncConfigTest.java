@@ -13,6 +13,7 @@ import org.springframework.test.context.TestPropertySource;
 @SpringBootTest
 @ActiveProfiles("test")
 @TestPropertySource(locations = "classpath:application-test.yml")
+@org.springframework.context.annotation.Import(TestDatabaseConfig.class)
 class AsyncConfigTest {
     @Autowired
     private AsyncConfig asyncConfig;

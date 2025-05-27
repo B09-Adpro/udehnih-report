@@ -1,7 +1,6 @@
 package udehnih.report.repository;
 import udehnih.report.model.Report;
 import udehnih.report.factory.ReportFactory;
-import udehnih.report.enums.ReportStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -18,7 +17,7 @@ public class ReportRepositoryTests {
     private ReportRepository reportRepository;
     @Test
 
-    void whenSaveReport_thenReturnSavedReport() {
+    void saveReportShouldReturnSavedReport() {
         Report report = ReportFactory.createOpenReport("12345", "Test Report", "Test Detail");
         Report savedReport = reportRepository.save(report);
         assertThat(savedReport).isNotNull();
@@ -27,7 +26,7 @@ public class ReportRepositoryTests {
     }
     @Test
 
-    void whenFindById_thenReturnReport() {
+    void findByIdShouldReturnReport() {
         Report report = ReportFactory.createOpenReport("12345", "Test Report", "Test Detail");
         entityManager.persist(report);
         entityManager.flush();
@@ -37,7 +36,7 @@ public class ReportRepositoryTests {
     }
     @Test
 
-    void whenFindByStudentId_thenReturnReports() throws ExecutionException, InterruptedException {
+    void findByStudentIdShouldReturnReports() throws ExecutionException, InterruptedException {
         Report report1 = ReportFactory.createOpenReport("12345", "Test Report 1", "Test Detail 1");
         Report report2 = ReportFactory.createOpenReport("12345", "Test Report 2", "Test Detail 2");
         entityManager.persist(report1);
@@ -49,7 +48,7 @@ public class ReportRepositoryTests {
     }
     @Test
 
-    void whenDeleteReport_thenReportShouldNotExist() {
+    void deleteReportShouldRemoveReportFromDatabase() {
         Report report = ReportFactory.createOpenReport("12345", "Test Report", "Test Detail");
         entityManager.persist(report);
         entityManager.flush();
@@ -59,7 +58,7 @@ public class ReportRepositoryTests {
     }
     @Test
 
-    void whenUpdateReport_thenReportShouldBeUpdated() {
+    void updateReportShouldUpdateReportFields() {
         Report report = ReportFactory.createOpenReport("12345", "Original Title", "Original Detail");
         entityManager.persist(report);
         entityManager.flush();
@@ -71,7 +70,7 @@ public class ReportRepositoryTests {
     }
     @Test
 
-    void whenExistsByStudentId_thenReturnTrueOrFalse() {
+    void existsByStudentIdShouldReturnCorrectBoolean() {
         Report report = ReportFactory.createOpenReport("12345", "Test Report", "Test Detail");
         entityManager.persist(report);
         entityManager.flush();
@@ -82,7 +81,7 @@ public class ReportRepositoryTests {
     }
     @Test
 
-    void whenFindAllAsync_thenReturnAllReports() throws ExecutionException, InterruptedException {
+    void findAllAsyncShouldReturnAllReports() throws ExecutionException, InterruptedException {
         Report report1 = ReportFactory.createOpenReport("12345", "Test Report 1", "Test Detail 1");
         Report report2 = ReportFactory.createOpenReport("67890", "Test Report 2", "Test Detail 2");
         entityManager.persist(report1);
