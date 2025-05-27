@@ -28,6 +28,16 @@ class AuthDataSourceConfigTest {
         System.setProperty("AUTH_DB_URL", "jdbc:h2:mem:authdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE");
         System.setProperty("AUTH_DB_USERNAME", "sa");
         System.setProperty("AUTH_DB_PASSWORD", "sa");
+        
+        try {
+            java.lang.reflect.Field field = AuthDataSourceConfig.class.getDeclaredField("testEnvironmentOverride");
+            if (field != null) {
+                field.setAccessible(true);
+                field.set(authDataSourceConfig, true);
+            }
+        } catch (Exception e) {
+            System.out.println("Note: Could not set testEnvironmentOverride field: " + e.getMessage());
+        }
     }
 
     @AfterEach
