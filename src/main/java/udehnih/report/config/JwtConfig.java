@@ -1,21 +1,20 @@
 package udehnih.report.config;
-
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class JwtConfig {
-    @Value("${jwt.secret-key}")
-    private String secretKey;
-
-    @Value("${jwt.expiration}")
-    private Long expiration;
-
+    
+    @Autowired
+    private Environment env;
+    
     public String getSecretKey() {
-        return secretKey;
+        return env.getProperty("JWT_SECRET_KEY");
     }
 
     public Long getExpiration() {
-        return expiration;
+        String expirationStr = env.getProperty("JWT_EXPIRATION");
+        return Long.parseLong(expirationStr);
     }
 } 

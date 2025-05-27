@@ -1,5 +1,4 @@
 package udehnih.report.model;
-
 import org.junit.jupiter.api.Test;
 import udehnih.report.factory.ReportFactory;
 import udehnih.report.enums.ReportStatus;
@@ -7,9 +6,9 @@ import udehnih.report.enums.RejectionMessage;
 import udehnih.report.util.AppConstants;
 import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.*;
-
 public class ReportTest {
     @Test
+
     void testReportBuilder() {
         Integer reportId = 1;
         String studentId = AppConstants.TEST_STUDENT_ID;
@@ -19,7 +18,6 @@ public class ReportTest {
         RejectionMessage rejectionMessage = RejectionMessage.INCOMPLETE_DETAIL;
         LocalDateTime createdAt = LocalDateTime.now();
         LocalDateTime updatedAt = LocalDateTime.now();
-
         Report report = Report.builder()
                 .reportId(reportId)
                 .studentId(studentId)
@@ -30,7 +28,6 @@ public class ReportTest {
                 .createdAt(createdAt)
                 .updatedAt(updatedAt)
                 .build();
-
         assertEquals(reportId, report.getReportId());
         assertEquals(studentId, report.getStudentId());
         assertEquals(title, report.getTitle());
@@ -40,8 +37,8 @@ public class ReportTest {
         assertEquals(createdAt, report.getCreatedAt());
         assertEquals(updatedAt, report.getUpdatedAt());
     }
-
     @Test
+
     void testReportNoArgsConstructor() {
         Report report = new Report();
         assertNull(report.getReportId());
@@ -53,8 +50,8 @@ public class ReportTest {
         assertNull(report.getCreatedAt());
         assertNull(report.getUpdatedAt());
     }
-
     @Test
+
     void testReportAllArgsConstructor() {
         Integer reportId = 1;
         String studentId = AppConstants.TEST_STUDENT_ID;
@@ -64,9 +61,7 @@ public class ReportTest {
         RejectionMessage rejectionMessage = RejectionMessage.INCOMPLETE_DETAIL;
         LocalDateTime createdAt = LocalDateTime.now();
         LocalDateTime updatedAt = LocalDateTime.now();
-
         Report report = new Report(reportId, studentId, title, detail, status, rejectionMessage, createdAt, updatedAt);
-
         assertEquals(reportId, report.getReportId());
         assertEquals(studentId, report.getStudentId());
         assertEquals(title, report.getTitle());
@@ -76,8 +71,8 @@ public class ReportTest {
         assertEquals(createdAt, report.getCreatedAt());
         assertEquals(updatedAt, report.getUpdatedAt());
     }
-
     @Test
+
     void testReportSettersAndGetters() {
         Report report = new Report();
         Integer reportId = 1;
@@ -88,7 +83,6 @@ public class ReportTest {
         RejectionMessage rejectionMessage = RejectionMessage.INCOMPLETE_DETAIL;
         LocalDateTime createdAt = LocalDateTime.now();
         LocalDateTime updatedAt = LocalDateTime.now();
-
         report.setReportId(reportId);
         report.setStudentId(studentId);
         report.setTitle(title);
@@ -97,7 +91,6 @@ public class ReportTest {
         report.setRejectionMessage(rejectionMessage);
         report.setCreatedAt(createdAt);
         report.setUpdatedAt(updatedAt);
-
         assertEquals(reportId, report.getReportId());
         assertEquals(studentId, report.getStudentId());
         assertEquals(title, report.getTitle());
@@ -107,28 +100,25 @@ public class ReportTest {
         assertEquals(createdAt, report.getCreatedAt());
         assertEquals(updatedAt, report.getUpdatedAt());
     }
-
     @Test
+
     void testReportEqualsAndHashCode() {
         Report report1 = ReportFactory.createOpenReport("12345", "Test Report", "This is a test report");
         Report report2 = ReportFactory.createClosedReport("56789", "Test Report 2", "This is a test report 2");
         Report report3 = ReportFactory.createOpenReport("12345", "Test Report", "This is a test report");
-
         report1.setReportId(1);
         report2.setReportId(2);
         report3.setReportId(1);
-
         assertEquals(report1, report1);
         assertEquals(report1, report3);
         assertNotEquals(report1, report2);
         assertNotEquals(report1, null);
         assertNotEquals(report1, new Object());
-
         assertEquals(report1.hashCode(), report1.hashCode());
         assertNotEquals(report1.hashCode(), report2.hashCode());
     }
-
     @Test
+
     void testReportToString() {
         Report report = ReportFactory.createOpenReport("12345", "Test Report", "This is a test report");
         String toString = report.toString();
@@ -137,8 +127,8 @@ public class ReportTest {
         assertTrue(toString.contains("This is a test report"));
         assertTrue(toString.contains(ReportStatus.OPEN.name()));
     }
-
     @Test
+
     void testIsOpenWithFactory() {
         Report openReport = ReportFactory.createOpenReport("1", "t", "d");
         Report closedReport = ReportFactory.createClosedReport("1", "t", "d");
