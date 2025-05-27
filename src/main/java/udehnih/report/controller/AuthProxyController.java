@@ -170,7 +170,8 @@ public class AuthProxyController {
         }
     }
     
-    private ResponseEntity<Object> forwardRequest(String path, HttpMethod method, 
+    // Made protected for testing purposes
+    protected ResponseEntity<Object> forwardRequest(String path, HttpMethod method, 
                                                 Object body, HttpHeaders headers) {
         try {
             String authServiceUrl = getAuthServiceUrl();
@@ -180,6 +181,8 @@ public class AuthProxyController {
             log.debug("Request method: {}", method);
             log.debug("Request body: {}", body);
             
+            // Use the injected RestTemplate instead of creating a new one
+            // This makes the method more testable
             HttpEntity<Object> requestEntity = new HttpEntity<>(body, headers);
             
             ResponseEntity<Object> response = restTemplate.exchange(fullUrl, method, requestEntity, Object.class);

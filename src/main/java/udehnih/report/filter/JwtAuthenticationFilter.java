@@ -74,35 +74,74 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private void authenticateUser(HttpServletRequest request, HttpServletResponse response, 
                                  String username, String role, String jwt) {
+    // First, try to get user roles from the database
+    java.util.List<SimpleGrantedAuthority> authorities = new java.util.ArrayList<>();
+    try {
+        UserInfo userInfo = authServiceClient.getUserByEmail(username);
+        if (userInfo != null && userInfo.getRoles() != null && !userInfo.getRoles().isEmpty()) {
+            log.info("Retrieved roles from database for user {}: {}", username, userInfo.getRoles());
+            for (String dbRole : userInfo.getRoles()) {
+                String formattedRole = dbRole.trim();
+                if (!formattedRole.startsWith(AppConstants.ROLE_PREFIX)) {
+                    formattedRole = AppConstants.ROLE_PREFIX + formattedRole;
+                }
+                authorities.add(new SimpleGrantedAuthority(formattedRole));
+            }
+        }
+    } catch (Exception e) {
+        log.warn("Error retrieving user roles from database: {}", e.getMessage());
+        // Fall back to JWT token roles if database lookup fails
+    }
+    
+    // If no roles were found in the database, fall back to the JWT token roles
+    if (authorities.isEmpty()) {
+        log.info("No roles found in database, using roles from JWT token: {}", role);
         String[] roleArray = role.split(",");
-        java.util.List<SimpleGrantedAuthority> authorities = new java.util.ArrayList<>();
         for (String singleRole : roleArray) {
             if (!singleRole.trim().startsWith(AppConstants.ROLE_PREFIX)) {
                 singleRole = AppConstants.ROLE_PREFIX + singleRole.trim();
             }
             authorities.add(new SimpleGrantedAuthority(singleRole));
         }
+        
+        // If still no roles, use STUDENT as default
         if (authorities.isEmpty()) {
+            log.info("No roles found in JWT token, using default STUDENT role");
             authorities.add(new SimpleGrantedAuthority(AppConstants.ROLE_PREFIX + AppConstants.STUDENT_ROLE));
         }
-        UserDetails userDetails = new User(username, "", authorities);
-        if (!jwtUtil.validateToken(jwt, userDetails)) {
-            log.warn("Token validation failed - token may be expired or invalid");
-            SecurityContextHolder.clearContext(); 
-            return;
-        }
-        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-            userDetails, null, userDetails.getAuthorities());
-        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-        SecurityContextHolder.getContext().setAuthentication(authToken);
-        log.info("Authentication successful. Role set to: {}", role);
-        log.info("Authentication details: {}", authToken.getAuthorities());
-        setRequestAttributes(request, username, role);
-        setAuthenticationHeaders(response, username, role, jwt);
-        setAuthenticationCookies(response, jwt);
-        setCacheControlHeaders(response);
-        setUserInfoHeaders(response, username);
     }
+    
+    UserDetails userDetails = new User(username, "", authorities);
+    if (!jwtUtil.validateToken(jwt, userDetails)) {
+        log.warn("Token validation failed - token may be expired or invalid");
+        SecurityContextHolder.clearContext(); 
+        return;
+    }
+    
+    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+        userDetails, null, userDetails.getAuthorities());
+    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+    SecurityContextHolder.getContext().setAuthentication(authToken);
+    
+    // Build a role string for logging and headers
+    StringBuilder roleBuilder = new StringBuilder();
+    for (SimpleGrantedAuthority authority : authorities) {
+        if (roleBuilder.length() > 0) {
+            roleBuilder.append(",");
+        }
+        roleBuilder.append(authority.getAuthority());
+    }
+    String updatedRole = roleBuilder.toString();
+    
+    log.info("Authentication successful. Roles set to: {}", updatedRole);
+    log.info("Authentication details: {}", authToken.getAuthorities());
+    
+    setRequestAttributes(request, username, updatedRole);
+    setAuthenticationHeaders(response, username, updatedRole, jwt);
+    setAuthenticationCookies(response, jwt);
+    setCacheControlHeaders(response);
+    setUserInfoHeaders(response, username);
+}
 
     private void setRequestAttributes(HttpServletRequest request, String username, String role) {
         request.setAttribute("X-User-Email", username);
