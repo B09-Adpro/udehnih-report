@@ -102,16 +102,20 @@ class AuthProxyControllerTest {
 
     @Test
     void testForwardRequest() {
-
+        // Setup test data
         String path = "/auth/login";
         HttpMethod method = HttpMethod.POST;
         Map<String, Object> body = Map.of("email", "test@example.com", "password", "password");
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json");
 
+        // Create the expected response
         ResponseEntity<Object> expectedResponse = new ResponseEntity<>(Map.of("token", "jwt-token"), HttpStatus.OK);
         
+        // Configure mocks
         when(env.getProperty("AUTH_SERVICE_URL")).thenReturn("http://auth-service:8080");
+        
+        // Mock the RestTemplate exchange method
         when(restTemplate.exchange(
                 eq("http://auth-service:8080/auth/login"),
                 eq(HttpMethod.POST),
@@ -119,18 +123,26 @@ class AuthProxyControllerTest {
                 eq(Object.class)
         )).thenReturn(expectedResponse);
 
-        ResponseEntity<Object> result = ReflectionTestUtils.invokeMethod(
-                authProxyController, 
-                "forwardRequest", 
+        // Call the method directly now that it's protected instead of private
+        ResponseEntity<Object> result = authProxyController.forwardRequest(
                 path, 
                 method, 
                 body, 
                 headers
         );
 
+        // Verify the results
         assertNotNull(result);
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertEquals(Map.of("token", "jwt-token"), result.getBody());
+        
+        // Verify that the RestTemplate was called with the expected parameters
+        verify(restTemplate).exchange(
+                eq("http://auth-service:8080/auth/login"),
+                eq(HttpMethod.POST),
+                any(HttpEntity.class),
+                eq(Object.class)
+        );
     }
 
     @Test

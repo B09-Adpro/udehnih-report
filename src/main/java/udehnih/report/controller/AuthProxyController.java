@@ -170,7 +170,8 @@ public class AuthProxyController {
         }
     }
     
-    private ResponseEntity<Object> forwardRequest(String path, HttpMethod method, 
+    // Made protected for testing purposes
+    protected ResponseEntity<Object> forwardRequest(String path, HttpMethod method, 
                                                 Object body, HttpHeaders headers) {
         try {
             String authServiceUrl = getAuthServiceUrl();
@@ -180,17 +181,11 @@ public class AuthProxyController {
             log.debug("Request method: {}", method);
             log.debug("Request body: {}", body);
             
-            // Create a custom RestTemplate with increased timeouts
-            RestTemplate customRestTemplate = new RestTemplate();
-            org.springframework.http.client.SimpleClientHttpRequestFactory factory = 
-                new org.springframework.http.client.SimpleClientHttpRequestFactory();
-            factory.setConnectTimeout(5000); // 5 seconds
-            factory.setReadTimeout(10000);   // 10 seconds
-            customRestTemplate.setRequestFactory(factory);
-            
+            // Use the injected RestTemplate instead of creating a new one
+            // This makes the method more testable
             HttpEntity<Object> requestEntity = new HttpEntity<>(body, headers);
             
-            ResponseEntity<Object> response = customRestTemplate.exchange(fullUrl, method, requestEntity, Object.class);
+            ResponseEntity<Object> response = restTemplate.exchange(fullUrl, method, requestEntity, Object.class);
             
             log.info("Response status: {}", response.getStatusCode());
             log.debug("Response body: {}", response.getBody());
