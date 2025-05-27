@@ -12,8 +12,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
@@ -28,8 +26,6 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.mock;
-import org.mockito.Spy;
 
 class AuthProxyControllerTest {
 
@@ -55,8 +51,12 @@ class AuthProxyControllerTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
 
+        // Ensure we're using the mocked RestTemplate
         ReflectionTestUtils.setField(authProxyController, "restTemplate", restTemplate);
         ReflectionTestUtils.setField(authProxyController, "passwordEncoder", passwordEncoder);
+        
+        // Set up environment for tests
+        when(env.getProperty("AUTH_SERVICE_URL")).thenReturn("http://test-auth-service:8080");
     }
 
     @Test
@@ -109,11 +109,9 @@ class AuthProxyControllerTest {
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json");
 
-        // Create the expected response
-        ResponseEntity<Object> expectedResponse = new ResponseEntity<>(Map.of("token", "jwt-token"), HttpStatus.OK);
+        Map<String, String> responseMap = Map.of("token", "jwt-token");
+        ResponseEntity<Object> expectedResponse = new ResponseEntity<>(responseMap, HttpStatus.OK);
         
-        when(env.getProperty("AUTH_SERVICE_URL")).thenReturn("http://test-auth-service:8080");
-
         when(restTemplate.exchange(
                 anyString(),
                 eq(HttpMethod.POST),
@@ -122,7 +120,7 @@ class AuthProxyControllerTest {
         )).thenReturn(expectedResponse);
 
         try {
-            // Call the method directly now that it's protected instead of private
+            // Call the method directly
             ResponseEntity<Object> result = authProxyController.forwardRequest(
                     path, 
                     method, 
@@ -131,14 +129,13 @@ class AuthProxyControllerTest {
             );
 
             // Verify the results
-            assertNotNull(result);
-            assertEquals(HttpStatus.OK, result.getStatusCode());
-            assertEquals(Map.of("token", "jwt-token"), result.getBody());
+            assertNotNull(result, "Result should not be null");
+            assertEquals(HttpStatus.OK, result.getStatusCode(), "Status code should be OK");
+            assertEquals(responseMap, result.getBody(), "Response body should match expected");
             
             // Verify that the RestTemplate was called with the expected parameters
-            // Use anyString() for the URL to make the test more robust
             verify(restTemplate).exchange(
-                    anyString(),
+                    anyString(), // Use anyString() for URL to be more flexible
                     eq(HttpMethod.POST),
                     any(HttpEntity.class),
                     eq(Object.class)
@@ -186,6 +183,8 @@ class AuthProxyControllerTest {
 
         assertNotNull(result);
         assertEquals(HttpStatus.OK, result.getStatusCode());
+        
+        @SuppressWarnings("unchecked")
         Map<String, Object> responseBody = (Map<String, Object>) result.getBody();
         assertEquals("jwt-token", responseBody.get("token"));
         assertEquals("test@example.com", responseBody.get("email"));
