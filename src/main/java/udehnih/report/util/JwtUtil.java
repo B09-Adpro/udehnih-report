@@ -338,4 +338,22 @@ public class JwtUtil {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
-} 
+
+    public Boolean validateTokenIgnoreExpiration(String token) {
+        try {
+            Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token);
+            return true;
+        } catch (Exception e) {
+            if (e.getMessage() != null && e.getMessage().contains("expired")) {
+                String username = extractUsername(token);
+                return username != null && !username.isEmpty();
+            }
+            log.error("Token validation failed: {}", e.getMessage());
+            return false;
+        }
+    }
+}
+
