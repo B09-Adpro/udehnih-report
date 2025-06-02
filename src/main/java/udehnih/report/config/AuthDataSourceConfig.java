@@ -30,13 +30,22 @@ public class AuthDataSourceConfig {
         log.info("Creating auth datasource");
         
         String url = System.getenv("AUTH_DB_URL");
+        if (url == null) {
+            url = System.getProperty("AUTH_DB_URL");
+        }
         String username = System.getenv("AUTH_DB_USERNAME");
+        if (username == null) {
+            username = System.getProperty("AUTH_DB_USERNAME");
+        }
         String password = System.getenv("AUTH_DB_PASSWORD");
-        
-        log.info("Auth DB URL from env: {}", url);
-        log.info("Auth DB Username from env: {}", username);
-        log.info("Auth DB Password from env: [MASKED]");
-        
+        if (password == null) {
+            password = System.getProperty("AUTH_DB_PASSWORD");
+        }
+
+        log.info("Auth DB URL from properties: {}", url);
+        log.info("Auth DB Username from properties: {}", username);
+        log.info("Auth DB Password from properties: [MASKED]");
+
         if (url != null && !url.isEmpty() && !url.startsWith("jdbc:")) {
             url = "jdbc:" + url;
             log.info("Added jdbc: prefix to URL: {}", url);
@@ -50,8 +59,11 @@ public class AuthDataSourceConfig {
         }
         
         try {
-            if (System.getProperty("spring.profiles.active") != null && 
-                System.getProperty("spring.profiles.active").contains("test")) {
+            String activeProfile = System.getenv("SPRING_PROFILES_ACTIVE");
+            if (activeProfile == null) {
+                activeProfile = System.getProperty("spring.profiles.active");
+            }
+            if (activeProfile != null && activeProfile.contains("test")) {
                 isTestEnvironment = true;
                 log.info("Detected test profile, assuming test environment");
             }
@@ -68,17 +80,17 @@ public class AuthDataSourceConfig {
         
         if (!isTestEnvironment) {
             if (url == null || url.isEmpty() || url.contains("${AUTH_DB_URL}")) {
-                log.error("AUTH_DB_URL not found in environment variables or contains unresolved placeholder");
+                log.error("AUTH_DB_URL not found in system properties or contains unresolved placeholder");
                 throw new IllegalStateException("AUTH_DB_URL not found or not resolved. Please check your .env file.");
             }
             
             if (username == null || username.isEmpty() || username.contains("${AUTH_DB_USERNAME}")) {
-                log.error("AUTH_DB_USERNAME not found in environment variables or contains unresolved placeholder");
+                log.error("AUTH_DB_USERNAME not found in system properties or contains unresolved placeholder");
                 throw new IllegalStateException("AUTH_DB_USERNAME not found or not resolved. Please check your .env file.");
             }
             
             if (password == null || password.isEmpty() || password.contains("${AUTH_DB_PASSWORD}")) {
-                log.error("AUTH_DB_PASSWORD not found in environment variables or contains unresolved placeholder");
+                log.error("AUTH_DB_PASSWORD not found in system properties or contains unresolved placeholder");
                 throw new IllegalStateException("AUTH_DB_PASSWORD not found or not resolved. Please check your .env file.");
             }
         } else {
@@ -128,3 +140,5 @@ public class AuthDataSourceConfig {
         return new JdbcTemplate(dataSource);
     }
 }
+
+
