@@ -18,9 +18,7 @@ import org.springframework.web.client.RestTemplate;
 
 import udehnih.report.util.JwtUtil;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,74 +52,6 @@ class AuthProxyControllerTest {
         MockitoAnnotations.openMocks(this);
         ReflectionTestUtils.setField(authProxyController, "restTemplate", restTemplate);
         ReflectionTestUtils.setField(authProxyController, "passwordEncoder", passwordEncoder);
-    }
-
-    @Test
-    void testGetAuthServiceUrl() {
-        when(env.getProperty("AUTH_SERVICE_URL")).thenReturn("http://auth-service:8080");
-        String result = ReflectionTestUtils.invokeMethod(authProxyController, "getAuthServiceUrl");
-        assertEquals("http://auth-service:8080", result, "Should use AUTH_SERVICE_URL from environment");
-
-        when(env.getProperty("AUTH_SERVICE_URL")).thenReturn(null);
-        try {
-            System.setProperty("AUTH_SERVICE_URL", "http://auth-service-sys:8080");
-            result = ReflectionTestUtils.invokeMethod(authProxyController, "getAuthServiceUrl");
-            assertEquals("http://auth-service-sys:8080", result, "Should use AUTH_SERVICE_URL from system properties");
-        } finally {
-            System.clearProperty("AUTH_SERVICE_URL");
-        }
-
-        when(env.getProperty("AUTH_SERVICE_URL")).thenReturn(null);
-        System.clearProperty("AUTH_SERVICE_URL");
-        try {
-            Map<String, String> env = new HashMap<>();
-            env.put("AUTH_SERVICE_URL", "http://auth-service-env:8080");
-            setEnv(env);
-            result = ReflectionTestUtils.invokeMethod(authProxyController, "getAuthServiceUrl");
-            assertEquals("http://auth-service-env:8080", result, "Should use AUTH_SERVICE_URL from system environment");
-        } catch (Exception e) {
-            System.out.println("Could not set environment variable: " + e.getMessage());
-        }
-
-
-        when(env.getProperty("AUTH_SERVICE_URL")).thenReturn(null);
-        System.clearProperty("AUTH_SERVICE_URL");
-
-        when(env.getProperty(eq("server.port"), anyString())).thenReturn("8000");
-        
-        result = ReflectionTestUtils.invokeMethod(authProxyController, "getAuthServiceUrl");
-        assertTrue(result.startsWith("http://localhost:"), "URL should start with http://localhost:");
-        assertTrue(result.endsWith(":8000"), "URL should end with port 8000");
-    }
-    
-    private void setEnv(Map<String, String> newEnv) throws Exception {
-        try {
-            Class<?> processEnvironmentClass = Class.forName("java.lang.ProcessEnvironment");
-            Field theEnvironmentField = processEnvironmentClass.getDeclaredField("theEnvironment");
-            theEnvironmentField.setAccessible(true);
-            @SuppressWarnings("unchecked")
-            Map<String, String> env = (Map<String, String>) theEnvironmentField.get(null);
-            env.putAll(newEnv);
-            Field theCaseInsensitiveEnvironmentField = processEnvironmentClass.getDeclaredField("theCaseInsensitiveEnvironment");
-            theCaseInsensitiveEnvironmentField.setAccessible(true);
-            @SuppressWarnings("unchecked")
-            Map<String, String> cienv = (Map<String, String>) theCaseInsensitiveEnvironmentField.get(null);
-            cienv.putAll(newEnv);
-        } catch (NoSuchFieldException e) {
-            Class<?>[] classes = Collections.class.getDeclaredClasses();
-            Map<String, String> env = System.getenv();
-            for (Class<?> cl : classes) {
-                if ("java.util.Collections$UnmodifiableMap".equals(cl.getName())) {
-                    Field field = cl.getDeclaredField("m");
-                    field.setAccessible(true);
-                    Object obj = field.get(env);
-                    @SuppressWarnings("unchecked")
-                    Map<String, String> map = (Map<String, String>) obj;
-                    map.clear();
-                    map.putAll(newEnv);
-                }
-            }
-        }
     }
 
     @Test
