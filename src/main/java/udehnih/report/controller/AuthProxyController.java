@@ -152,18 +152,18 @@ public class AuthProxyController {
         String serverPort = env.getProperty("server.port", "8080");
         String localUrl = "http://localhost:" + serverPort;
         
+        // Check for various local URL patterns
         if (authServiceUrl.equals(localUrl) || 
             authServiceUrl.equals("http://localhost:8080") ||
-            authServiceUrl.startsWith("http://localhost:" + serverPort)) {
+            authServiceUrl.startsWith("http://localhost:" + serverPort) ||
+            authServiceUrl.startsWith("http://127.0.0.1")) {
             log.info("Auth service URL points to this server: {}, using local auth", authServiceUrl);
             return false;
         }
 
         try {
-            RestTemplate pingTemplate = new RestTemplate();
-            pingTemplate.setRequestFactory(new org.springframework.http.client.SimpleClientHttpRequestFactory());
-            ((org.springframework.http.client.SimpleClientHttpRequestFactory) pingTemplate.getRequestFactory()).setConnectTimeout(1000);
-            pingTemplate.headForHeaders(authServiceUrl);
+            restTemplate.headForHeaders(authServiceUrl);
+            log.info("External auth service at {} is available", authServiceUrl);
             return true;
         } catch (Exception e) {
             log.warn("External auth service at {} is not available: {}", authServiceUrl, e.getMessage());
@@ -219,8 +219,6 @@ public class AuthProxyController {
         
         try {
             log.info("Attempting local login for user: {}", email);
-            
-            // Proceed with local authentication using the configured database connection
             
             String userSql = "SELECT id, email, password, name FROM users WHERE email = ?";
             List<Map<String, Object>> users = authJdbcTemplate.queryForList(userSql, email);
@@ -368,8 +366,17 @@ public class AuthProxyController {
             
             Long userId = authJdbcTemplate.queryForObject(
                     "SELECT id FROM users WHERE email = ?", Long.class, email);
+            if (userId == null) {
+                log.error("Failed to retrieve userId for newly created user: {}", email);
+                throw new RuntimeException("Failed to retrieve user ID");
+            }
+            
             Long roleId = authJdbcTemplate.queryForObject(
                     "SELECT id FROM roles WHERE name = 'STUDENT'", Long.class);
+            if (roleId == null) {
+                log.error("Failed to retrieve roleId for STUDENT role");
+                throw new RuntimeException("Failed to retrieve role ID");
+            }
             
             authJdbcTemplate.update("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)",
                     userId, roleId);
