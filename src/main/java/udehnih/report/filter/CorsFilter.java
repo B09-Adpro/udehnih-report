@@ -53,7 +53,7 @@ public class CorsFilter extends OncePerRequestFilter {
     private String getAllowedOrigins() {
         String origins = env.getProperty("ALLOWED_ORIGINS");
         if (origins == null || origins.isEmpty()) {
-            return "*";
+            return "http://localhost:3000,http://localhost:8000,http://3.233.138.26";
         }
         return origins;
     }
@@ -62,34 +62,47 @@ public class CorsFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         String origin = request.getHeader("Origin");
-        if (origin == null) {
-            origin = "*";
-        }
         
-        String allowedOrigins = getAllowedOrigins();
-        if (!"*".equals(allowedOrigins)) {
+        if (origin != null) {
+            String allowedOrigins = getAllowedOrigins();
             boolean allowed = false;
-            for (String allowedOrigin : allowedOrigins.split(",")) {
-                if (allowedOrigin.trim().equals(origin)) {
-                    allowed = true;
-                    break;
+            if ("*".equals(allowedOrigins)) {
+                allowed = true;
+                response.setHeader("Access-Control-Allow-Origin", origin);
+            } else {
+                for (String allowedOrigin : allowedOrigins.split(",")) {
+                    if (allowedOrigin.trim().equals(origin)) {
+                        allowed = true;
+                        response.setHeader("Access-Control-Allow-Origin", origin);
+                        break;
+                    }
                 }
             }
-            if (!allowed) {
-                origin = "*";
+            
+            if (!allowed && !"*".equals(allowedOrigins)) {
+                if (origin.startsWith("http://localhost:") || 
+                    origin.contains("127.0.0.1") || 
+                    origin.contains("3.233.138.26")) {
+                    response.setHeader("Access-Control-Allow-Origin", origin);
+                    allowed = true;
+                }
             }
+            if (allowed) {
+                response.setHeader("Access-Control-Allow-Credentials", getAllowCredentials());
+            }
+        } else {
+            response.setHeader("Access-Control-Allow-Origin", "*");
         }
         
-        response.setHeader("Access-Control-Allow-Origin", origin);
         response.setHeader("Access-Control-Allow-Methods", getAllowedMethods());
         response.setHeader("Access-Control-Allow-Headers", getAllowedHeaders());
         response.setHeader("Access-Control-Expose-Headers", getExposedHeaders());
         response.setHeader("Access-Control-Max-Age", "3600");
-        response.setHeader("Access-Control-Allow-Credentials", getAllowCredentials());
         response.setHeader("Vary", "Origin");
         
         if ("OPTIONS".equals(request.getMethod())) {
             response.setStatus(HttpServletResponse.SC_OK);
+            return;
         } else {
             filterChain.doFilter(request, response);
         }
