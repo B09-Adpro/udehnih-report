@@ -53,7 +53,8 @@ public class AuthProxyController {
             url = System.getenv("AUTH_SERVICE_URL");
         }
         if (url == null || url.isEmpty()) {
-            url = "http://localhost:8080";
+            String port = env.getProperty("server.port", "8000");
+            url = "http://localhost:" + port;
             log.warn("No AUTH_SERVICE_URL found, defaulting to self: {}", url);
         }
         return url;
