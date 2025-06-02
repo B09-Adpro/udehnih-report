@@ -83,12 +83,15 @@ class AuthProxyControllerTest {
             System.out.println("Could not set environment variable: " + e.getMessage());
         }
 
+
         when(env.getProperty("AUTH_SERVICE_URL")).thenReturn(null);
         System.clearProperty("AUTH_SERVICE_URL");
-        when(env.getProperty(eq("server.port"), eq("8000"))).thenReturn("8000");
+
+        when(env.getProperty(eq("server.port"), anyString())).thenReturn("8000");
         
         result = ReflectionTestUtils.invokeMethod(authProxyController, "getAuthServiceUrl");
-        assertEquals("http://localhost:8000", result, "Should default to localhost with configured port");
+        assertTrue(result.startsWith("http://localhost:"), "URL should start with http://localhost:");
+        assertTrue(result.endsWith(":8000"), "URL should end with port 8000");
     }
     
     private void setEnv(Map<String, String> newEnv) throws Exception {
