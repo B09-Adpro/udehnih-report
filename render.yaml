@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: udehnih-report
+    env: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: GF_SECURITY_ADMIN_USER
+        value: admin
+      - key: GF_SECURITY_ADMIN_PASSWORD
+        value: admin
+      - key: GF_SERVER_ROOT_URL
+        value: https://udehnih-report.onrender.com
+      - key: GF_SERVER_DOMAIN
+        value: udehnih-report.onrender.com
+    healthCheckPath: /actuator/health
+    numInstances: 1
+    disk:
+      name: combined-data
+      mountPath: /data
+      sizeGB: 2

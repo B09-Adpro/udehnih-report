@@ -13,6 +13,7 @@ val seleniumJupiterVersion = "5.0.1"
 val webdrivermanagerVersion = "5.6.3"
 val junitJupiterVersion = "5.9.1"
 val jjwtVersion = "0.11.5"
+val mockitoVersion = "5.2.0" // Added mockito version
 
 java {
     toolchain {
@@ -55,6 +56,10 @@ dependencies {
     implementation("org.postgresql:postgresql")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
 
+    // Adding Mockito Core and Mockito Inline for static mocking
+    testImplementation("org.mockito:mockito-core:$mockitoVersion")
+    testImplementation("org.mockito:mockito-inline:$mockitoVersion") // For static method mocking
+
     testImplementation("org.seleniumhq.selenium:selenium-java:$seleniumJavaVersion")
     testImplementation("io.github.bonigarcia:selenium-jupiter:$seleniumJupiterVersion")
     testImplementation("io.github.bonigarcia:webdrivermanager:$webdrivermanagerVersion")
@@ -67,6 +72,9 @@ dependencies {
     testImplementation("com.h2database:h2")
     testImplementation("org.hibernate.orm:hibernate-core:6.4.4.Final")
     testImplementation("org.hibernate.orm:hibernate-community-dialects:6.4.4.Final")
+
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+	implementation("io.micrometer:micrometer-registry-prometheus")
 }
 
 tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
