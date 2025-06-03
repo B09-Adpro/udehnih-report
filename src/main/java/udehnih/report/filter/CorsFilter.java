@@ -53,7 +53,7 @@ public class CorsFilter extends OncePerRequestFilter {
     private String getAllowedOrigins() {
         String origins = env.getProperty("ALLOWED_ORIGINS");
         if (origins == null || origins.isEmpty()) {
-            return "http://localhost:3000,http://localhost:8000,http://3.233.138.26";
+            return "*";
         }
         return origins;
     }
@@ -64,34 +64,10 @@ public class CorsFilter extends OncePerRequestFilter {
         String origin = request.getHeader("Origin");
         
         if (origin != null) {
-            String allowedOrigins = getAllowedOrigins();
-            boolean allowed = false;
-            if ("*".equals(allowedOrigins)) {
-                allowed = true;
-                response.setHeader("Access-Control-Allow-Origin", origin);
-            } else {
-                for (String allowedOrigin : allowedOrigins.split(",")) {
-                    if (allowedOrigin.trim().equals(origin)) {
-                        allowed = true;
-                        response.setHeader("Access-Control-Allow-Origin", origin);
-                        break;
-                    }
-                }
-            }
-            
-            if (!allowed && !"*".equals(allowedOrigins)) {
-                if (origin.startsWith("http://localhost:") || 
-                    origin.contains("127.0.0.1") || 
-                    origin.contains("3.233.138.26")) {
-                    response.setHeader("Access-Control-Allow-Origin", origin);
-                    allowed = true;
-                }
-            }
-            if (allowed) {
-                response.setHeader("Access-Control-Allow-Credentials", getAllowCredentials());
-            }
+            response.setHeader("Access-Control-Allow-Origin", origin);
+            response.setHeader("Access-Control-Allow-Credentials", getAllowCredentials());
         } else {
-            response.setHeader("Access-Control-Allow-Origin", "*");
+            response.setHeader("Access-Control-Allow-Origin", getAllowedOrigins());
         }
         
         response.setHeader("Access-Control-Allow-Methods", getAllowedMethods());

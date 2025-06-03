@@ -27,6 +27,13 @@ import java.util.Map;
 )
 @EntityScan(basePackages = "udehnih.report.model")
 public class MainDataSourceConfig {
+    
+    private boolean testEnvironmentOverride = false;
+    
+    public void setTestEnvironmentOverride(boolean override) {
+        this.testEnvironmentOverride = override;
+    }
+    
     @Primary
     @Bean
     @ConfigurationProperties(prefix = "spring.datasource")
@@ -46,28 +53,30 @@ public class MainDataSourceConfig {
         String username = properties.getUsername();
         String password = properties.getPassword();
         
-        boolean isTestEnvironment = false;
+        boolean isTestEnvironment = testEnvironmentOverride;
         
-        if (url != null && url.contains("h2:mem")) {
-            isTestEnvironment = true;
-            log.info("Detected H2 database URL, assuming test environment");
-        }
-        
-        try {
-            if (System.getProperty("spring.profiles.active") != null && 
-                System.getProperty("spring.profiles.active").contains("test")) {
+        if (!testEnvironmentOverride) {
+            if (url != null && url.contains("h2:mem")) {
                 isTestEnvironment = true;
-                log.info("Detected test profile, assuming test environment");
+                log.info("Detected H2 database URL, assuming test environment");
             }
-        } catch (Exception e) {
-            log.warn("Could not check spring.profiles.active: {}", e.getMessage());
-        }
-        
-        try {
-            Class.forName("org.junit.jupiter.api.Test");
-            isTestEnvironment = true;
-            log.info("Detected JUnit classes, assuming test environment");
-        } catch (ClassNotFoundException e) {
+            
+            try {
+                if (System.getProperty("spring.profiles.active") != null && 
+                    System.getProperty("spring.profiles.active").contains("test")) {
+                    isTestEnvironment = true;
+                    log.info("Detected test profile, assuming test environment");
+                }
+            } catch (Exception e) {
+                log.warn("Could not check spring.profiles.active: {}", e.getMessage());
+            }
+            
+            try {
+                Class.forName("org.junit.jupiter.api.Test");
+                isTestEnvironment = true;
+                log.info("Detected JUnit classes, assuming test environment");
+            } catch (ClassNotFoundException e) {
+            }
         }
         
         if (isTestEnvironment) {
