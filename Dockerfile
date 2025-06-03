@@ -2,8 +2,7 @@ FROM docker.io/library/eclipse-temurin:21-jdk-alpine AS builder
  
 WORKDIR /src/main/java/udehnih/report
 COPY . .
-RUN # Expose ports for Nginx (main), Spring Boot, Prometheus, and Grafana
-EXPOSE 8000 8080 9090 3001 ./gradlew clean bootJar
+RUN ./gradlew clean bootJar
 
 FROM docker.io/library/eclipse-temurin:21-jre-alpine AS runner
 
@@ -52,27 +51,7 @@ RUN mkdir -p /var/lib/grafana/dashboards
 
 # Configure Nginx as reverse proxy
 RUN mkdir -p /etc/nginx/conf.d
-RUN echo 'server {
-    listen 8080;
-    
-    location / {
-        proxy_pass http://localhost:8080;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-    
-    location /prometheus/ {
-        proxy_pass http://localhost:9090/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-    
-    location /grafana/ {
-        proxy_pass http://localhost:3001/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-}' > /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Setup supervisor to manage all processes
 RUN mkdir -p /etc/supervisor.d
@@ -116,8 +95,8 @@ EOF
 
 RUN mkdir -p /var/log
 
-# Expose ports for Spring Boot, Prometheus, and Grafana
-EXPOSE 8080 9090 3001
+# Expose ports for Nginx (main), Spring Boot, Prometheus, and Grafana
+EXPOSE 8000 8080 9090 3000
 
 # Start supervisor which will start all services
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf", "-i", "/etc/supervisor.d"]
